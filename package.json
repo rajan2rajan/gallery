@@ -1,0 +1,23 @@
+{
+  "name": "puku",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [
+    "puku"
+  ],
+  "homepage": "https://github.com/rajan2rajan/puku#readme",
+  "bugs": {
+    "url": "https://github.com/rajan2rajan/puku/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rajan2rajan/puku.git"
+  },
+  "license": "ISC",
+  "author": "rajan2rajan",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
