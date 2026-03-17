@@ -537,7 +537,6 @@ const HomePage = () => {
   const foldersY = useTransform(scrollYProgress, [0, 0.2], [150, -30]);
 
   const relationshipStart = new Date('2025-01-17T00:00:00');
-
   useEffect(() => {
     fetchHomepagePhotos();
     fetchFolders();
