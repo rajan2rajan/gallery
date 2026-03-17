@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api'; // Make sure this matches your backend port
+// const API_URL = 'http://localhost:5000/api'; // Make sure this matches your backend port
+const API_URL = 'https://rhea-6a65.onrender.com/api'; // Make sure this matches your backend port
+
 
 
 const api = axios.create({
