@@ -24,7 +24,7 @@ const auth = admin.auth();
 
 const app = express();
 
-// Middleware
+// Middleware  
 app.use(helmet());
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'https://rhea-hj1k.onrender.com',
