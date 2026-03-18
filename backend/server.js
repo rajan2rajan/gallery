@@ -18,6 +18,7 @@ app.use(cors({
     'http://127.0.0.1:3000',
     'http://192.168.85.1:3000',
     'https://gallery-55v1.onrender.com',  //  backend url when deployed
+    'https://mypukurhea.onrender.com' // frontend url when deployed
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
