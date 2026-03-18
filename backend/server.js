@@ -15,6 +15,9 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({
   origin: [    
     'http://localhost:3000',
+    'http://192.168.85.1:3000',
+    'http:127.0.0.1:3000',
+    'https://rhea-6a65.onrender.com',
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -37,9 +40,9 @@ try {
   if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
     
     console.log('📁 Loading Firebase credentials from environment variables');
-    console.log('Project ID:', process.env.FIREBASE_PROJECT_ID);
-    console.log('Client Email:', process.env.FIREBASE_CLIENT_EMAIL);
-    console.log('Private Key length:', process.env.FIREBASE_PRIVATE_KEY.length);
+    // console.log('Project ID:', process.env.FIREBASE_PROJECT_ID);
+    // console.log('Client Email:', process.env.FIREBASE_CLIENT_EMAIL);
+    // console.log('Private Key length:', process.env.FIREBASE_PRIVATE_KEY.length);
     
     const serviceAccount = {
       projectId: process.env.FIREBASE_PROJECT_ID,
@@ -50,7 +53,7 @@ try {
     // Try .firebasestorage.app first (new format)
     bucketName = `${serviceAccount.projectId}.firebasestorage.app`;
     
-    console.log(`Attempting to use bucket: ${bucketName}`);
+    // console.log(`Attempting to use bucket: ${bucketName}`);
     
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
@@ -62,8 +65,8 @@ try {
     auth = admin.auth();
     firebaseInitialized = true;
     
-    console.log('✅ Firebase Admin initialized successfully from environment variables');
-    console.log(`📦 Using bucket: ${bucketName}`);
+    // console.log('✅ Firebase Admin initialized successfully from environment variables');
+    // console.log(`📦 Using bucket: ${bucketName}`);
     
   } else {
     console.log('⚠️ No Firebase credentials found in environment variables.');
@@ -103,7 +106,7 @@ try {
       firebaseInitialized = true;
       
       console.log('✅ Firebase Admin initialized with alternative bucket');
-      console.log(`📦 Using bucket: ${bucketName}`);
+      // console.log(`📦 Using bucket: ${bucketName}`);
       
     } catch (secondError) {
       console.error('❌ Alternative also failed:', secondError.message);
@@ -682,7 +685,7 @@ app.post('/api/admin/photos/bulk', authenticateUser, isAdmin, upload.array('phot
     
     const folderName = folderDoc.data().name;
     
-    console.log(`📤 Uploading ${req.files.length} files to folder: ${folderName}`);
+    // console.log(`📤 Uploading ${req.files.length} files to folder: ${folderName}`);
     
     const uploadedPhotos = [];
     const failedUploads = [];
@@ -699,7 +702,7 @@ app.post('/api/admin/photos/bulk', authenticateUser, isAdmin, upload.array('phot
         const fileName = `${timestamp}_${random}_${safeFileName}`;
         const filePath = `folders/${folderName}/${fileName}`;
         
-        console.log(`Saving to: ${filePath}`);
+        // console.log(`Saving to: ${filePath}`);
         
         // Upload to Firebase Storage
         const bucketFile = bucket.file(filePath);
@@ -752,7 +755,7 @@ app.post('/api/admin/photos/bulk', authenticateUser, isAdmin, upload.array('phot
           folderName: folderName
         });
         
-        console.log(`✅ Uploaded: ${fileName}`);
+        // console.log(`✅ Uploaded: ${fileName}`);
         
       } catch (fileError) {
         console.error(`❌ Error uploading ${file.originalname}:`, fileError);
@@ -795,7 +798,7 @@ app.post('/api/admin/photos/bulk', authenticateUser, isAdmin, upload.array('phot
       response.failedCount = failedUploads.length;
     }
     
-    console.log(`📊 Upload complete: ${uploadedPhotos.length} successful, ${failedUploads.length} failed`);
+    // console.log(`📊 Upload complete: ${uploadedPhotos.length} successful, ${failedUploads.length} failed`);
     res.status(201).json(response);
     
   } catch (error) {
@@ -879,7 +882,7 @@ app.post('/api/admin/homepage-photos', authenticateUser, isAdmin, homepageUpload
       return res.status(400).json({ error: 'No photo uploaded' });
     }
     
-    console.log('📸 Uploading homepage photo:', req.file.originalname);
+    // console.log('📸 Uploading homepage photo:', req.file.originalname);
     
     const { title, description } = req.body;
     
@@ -889,7 +892,7 @@ app.post('/api/admin/homepage-photos', authenticateUser, isAdmin, homepageUpload
     const fileName = `homepage_${timestamp}_${safeFileName}`;
     const filePath = `homepage/${fileName}`;
     
-    console.log('Saving to:', filePath);
+    // console.log('Saving to:', filePath);
     
     // Upload to Firebase Storage
     const file = bucket.file(filePath);
@@ -909,7 +912,7 @@ app.post('/api/admin/homepage-photos', authenticateUser, isAdmin, homepageUpload
     
     // Get public URL
     const publicUrl = `https://storage.googleapis.com/${bucketName}/${filePath}`;
-    console.log('Public URL:', publicUrl);
+    // console.log('Public URL:', publicUrl);
     
     // Save photo metadata to Firestore
     const photoData = {
@@ -928,7 +931,7 @@ app.post('/api/admin/homepage-photos', authenticateUser, isAdmin, homepageUpload
     
     const photoRef = await db.collection('homepagePhotos').add(photoData);
     
-    console.log('✅ Homepage photo uploaded successfully with ID:', photoRef.id);
+    // console.log('✅ Homepage photo uploaded successfully with ID:', photoRef.id);
     
     res.status(201).json({
       id: photoRef.id,
@@ -968,7 +971,7 @@ app.get('/api/admin/homepage-photos', authenticateUser, isAdmin, async (req, res
       });
     });
     
-    console.log(`Found ${photos.length} homepage photos in Firestore`);
+    // console.log(`Found ${photos.length} homepage photos in Firestore`);
     res.json(photos);
     
   } catch (error) {
