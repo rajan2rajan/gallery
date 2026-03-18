@@ -17,7 +17,7 @@ app.use(cors({
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://192.168.85.1:3000',
-    'https://rhea-6a65.onrender.com'  // Your frontend when deployed
+    'https://gallery-55v1.onrender.com',  //  backend url when deployed
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
