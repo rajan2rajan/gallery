@@ -203,34 +203,55 @@ const fetchFolders = async () => {
   return (
     <div className="image-home">
       {/* Background Slideshow */}
-      <div className="image-background">
-        <AnimatePresence mode="wait">
-          {homepagePhotos.length > 0 ? (
-            <motion.div
-              key={currentPhotoIndex}
-              className="background-image slideshow-image"
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 1.5, ease: "easeInOut" }}
-              style={{ 
-                backgroundImage: `url(${homepagePhotos[currentPhotoIndex]?.url})`
-              }}
-            />
-          ) : (
-            <motion.div
-              className="background-image slideshow-image"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              style={{ 
-                backgroundImage: `url(${process.env.PUBLIC_URL}/images/background.png)`
-              }}
-            />
-          )}
-        </AnimatePresence>
-        <div className="image-overlay"></div>
-      </div>
+      {/* Background Slideshow - Mobile Optimized */}
+<div className="image-background">
+  <AnimatePresence mode="wait">
+    {homepagePhotos.length > 0 ? (
+      <motion.div
+        key={currentPhotoIndex}
+        className="background-image slideshow-image mobile-optimized"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ 
+          opacity: { duration: 1, ease: "easeInOut" }
+          // NO scale animation at all!
+        }}
+        style={{ 
+          backgroundImage: `url(${homepagePhotos[currentPhotoIndex]?.url})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          // Force stable rendering
+          transform: 'scale(1)',
+          transformOrigin: 'center center',
+          willChange: 'opacity',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden'
+        }}
+      />
+    ) : (
+      <motion.div
+        className="background-image slideshow-image mobile-optimized"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        style={{ 
+          backgroundImage: `url(${process.env.PUBLIC_URL}/images/background.png)`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          transform: 'scale(1)',
+          transformOrigin: 'center center',
+          willChange: 'opacity',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden'
+        }}
+      />
+    )}
+  </AnimatePresence>
+  <div className="image-overlay"></div>
+</div>
 
       {!showFolderContent ? (
         <>

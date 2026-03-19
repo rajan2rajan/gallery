@@ -25,6 +25,10 @@
   background-position: 70% center;
   background-repeat: no-repeat;
   background-attachment: fixed;
+  image-rendering: -webkit-optimize-contrast;  /* For Safari */
+  image-rendering: crisp-edges;                 /* For Firefox */
+  -webkit-transform: translateZ(0);              /* Force hardware acceleration */
+  transform: translateZ(0);
 }
 
 /* Image overlay */
