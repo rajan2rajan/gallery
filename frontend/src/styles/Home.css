@@ -882,3 +882,97 @@
     max-width: 220px;
   }
 }
+
+/* ========== MOBILE VIDEO FIX ========== */
+
+/* Make video thumbnails work on mobile */
+.polaroid-video-thumbnail {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  overflow: hidden;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.polaroid-video-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+/* For mobile - show a poster frame if available */
+.polaroid-video-preview[poster] {
+  object-fit: cover;
+}
+
+/* Fallback for mobile when video doesn't show thumbnail */
+.polaroid-video-thumbnail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+  z-index: 0;
+}
+
+.polaroid-video-preview {
+  position: relative;
+  z-index: 1;
+}
+
+.polaroid-play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: white;
+  opacity: 0.8;
+  transition: all 0.3s;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.polaroid-card:hover .polaroid-play-icon {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.1);
+  background: rgba(255, 105, 180, 0.9);
+}
+
+/* Mobile-specific fixes */
+@media (max-width: 768px) {
+  .polaroid-video-thumbnail {
+    background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+  }
+
+  /* Show a video icon as fallback on mobile */
+  .polaroid-video-thumbnail::after {
+    content: '🎬';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    color: #ff69b4;
+    z-index: 1;
+    opacity: 0.7;
+  }
+
+  .polaroid-video-preview {
+    opacity: 0.5;
+  }
+}
