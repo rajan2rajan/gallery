@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import './FolderManager.css';
 
-const FolderManager = ({ onSelectFolder, selectedFolderId }) => {
+const FolderManager = ({ onSelectFolder, selectedFolderId, onAlbumClick }) => {
   const { currentUser, getToken } = useAuth();
   const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,27 +36,27 @@ const FolderManager = ({ onSelectFolder, selectedFolderId }) => {
 
   const handleCreateFolder = async (e) => {
     e.preventDefault();
-    
+
     if (!newFolderName.trim()) {
       toast.warning('Please enter a folder name');
       return;
     }
-    
+
     try {
       const token = await getToken();
-      const response = await api.post('/admin/folders', {
+      await api.post('/admin/folders', {
         name: newFolderName.trim(),
         description: newFolderDesc.trim()
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       toast.success(`Folder "${newFolderName}" created successfully`);
       setNewFolderName('');
       setNewFolderDesc('');
       setShowCreateForm(false);
       loadFolders();
-      
+
     } catch (error) {
       console.error('Error creating folder:', error);
       toast.error(error.response?.data?.error || 'Failed to create folder');
@@ -67,20 +67,20 @@ const FolderManager = ({ onSelectFolder, selectedFolderId }) => {
     if (!window.confirm(`Are you sure you want to delete folder "${folderName}" and all its photos?`)) {
       return;
     }
-    
+
     try {
       const token = await getToken();
       await api.delete(`/admin/folders/${folderId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       toast.success(`Folder "${folderName}" deleted`);
       loadFolders();
-      
+
       if (selectedFolderId === folderId && onSelectFolder) {
         onSelectFolder(null);
       }
-      
+
     } catch (error) {
       console.error('Error deleting folder:', error);
       toast.error('Failed to delete folder');
@@ -89,12 +89,12 @@ const FolderManager = ({ onSelectFolder, selectedFolderId }) => {
 
   const handleUpdateFolder = async (e) => {
     e.preventDefault();
-    
+
     if (!editingFolder.name.trim()) {
       toast.warning('Please enter a folder name');
       return;
     }
-    
+
     try {
       const token = await getToken();
       await api.put(`/admin/folders/${editingFolder.id}`, {
@@ -103,14 +103,21 @@ const FolderManager = ({ onSelectFolder, selectedFolderId }) => {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       toast.success('Folder updated successfully');
       setEditingFolder(null);
       loadFolders();
-      
+
     } catch (error) {
       console.error('Error updating folder:', error);
       toast.error('Failed to update folder');
+    }
+  };
+
+  // Handle album click - opens AlbumView
+  const handleAlbumClick = (folder) => {
+    if (onAlbumClick) {
+      onAlbumClick(folder);
     }
   };
 
@@ -132,18 +139,18 @@ const FolderManager = ({ onSelectFolder, selectedFolderId }) => {
     <div className="folder-manager">
       <div className="folder-header">
         <h2>📁 Photo Albums</h2>
-        <button 
+        <button
           className="btn-create"
           onClick={() => setShowCreateForm(!showCreateForm)}
         >
-          {showCreateForm ? '− Cancel' : '+ New Folder'}
+          {showCreateForm ? '− Cancel' : '+ New Album'}
         </button>
       </div>
 
       {/* Create Folder Form */}
       <AnimatePresence>
         {showCreateForm && (
-          <motion.div 
+          <motion.div
             className="create-folder-form"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -151,12 +158,12 @@ const FolderManager = ({ onSelectFolder, selectedFolderId }) => {
           >
             <form onSubmit={handleCreateFolder}>
               <div className="form-group">
-                <label>Folder Name *</label>
+                <label>Album Name *</label>
                 <input
                   type="text"
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
-                  placeholder="e.g., Birthday, Vacation, init"
+                  placeholder="e.g., Birthday, Vacation, Memories"
                   required
                 />
               </div>
@@ -165,12 +172,12 @@ const FolderManager = ({ onSelectFolder, selectedFolderId }) => {
                 <textarea
                   value={newFolderDesc}
                   onChange={(e) => setNewFolderDesc(e.target.value)}
-                  placeholder="What's this folder about?"
+                  placeholder="What's this album about?"
                   rows="2"
                 />
               </div>
               <div className="form-actions">
-                <button type="submit" className="btn-save">Create Folder</button>
+                <button type="submit" className="btn-save">Create Album</button>
                 <button type="button" className="btn-cancel" onClick={() => setShowCreateForm(false)}>Cancel</button>
               </div>
             </form>
@@ -181,24 +188,24 @@ const FolderManager = ({ onSelectFolder, selectedFolderId }) => {
       {/* Edit Folder Modal */}
       <AnimatePresence>
         {editingFolder && (
-          <motion.div 
+          <motion.div
             className="edit-modal-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setEditingFolder(null)}
           >
-            <motion.div 
+            <motion.div
               className="edit-modal-content"
               initial={{ scale: 0.8, y: 50 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.8, y: 50 }}
               onClick={e => e.stopPropagation()}
             >
-              <h3>Edit Folder</h3>
+              <h3>Edit Album</h3>
               <form onSubmit={handleUpdateFolder}>
                 <div className="form-group">
-                  <label>Folder Name</label>
+                  <label>Album Name</label>
                   <input
                     type="text"
                     value={editingFolder.name}
@@ -234,7 +241,7 @@ const FolderManager = ({ onSelectFolder, selectedFolderId }) => {
       <div className="folders-grid">
         {folders.length === 0 ? (
           <div className="no-folders">
-            <p>No folders yet. Create your first album!</p>
+            <p>No albums yet. Create your first album!</p>
           </div>
         ) : (
           folders.map(folder => (
@@ -244,7 +251,7 @@ const FolderManager = ({ onSelectFolder, selectedFolderId }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ y: -5 }}
-              onClick={() => onSelectFolder && onSelectFolder(folder.id)}
+              onClick={() => handleAlbumClick(folder)}
             >
               <div className="folder-cover">
                 {folder.coverPhoto ? (
@@ -256,7 +263,7 @@ const FolderManager = ({ onSelectFolder, selectedFolderId }) => {
                 )}
                 <div className="folder-photo-count">{folder.photoCount || 0}</div>
               </div>
-              
+
               <div className="folder-info">
                 <h3 className="folder-name">{folder.name}</h3>
                 {folder.description && (
@@ -265,30 +272,30 @@ const FolderManager = ({ onSelectFolder, selectedFolderId }) => {
                 <div className="folder-meta">
                   <span className="folder-date">{formatDate(folder.createdAt)}</span>
                   <div className="folder-actions">
-                    <button 
+                    <button
                       className="folder-action edit"
                       onClick={(e) => {
                         e.stopPropagation();
                         setEditingFolder(folder);
                       }}
-                      title="Edit folder"
+                      title="Edit album"
                     >
                       ✏️
                     </button>
-                    <button 
+                    <button
                       className="folder-action delete"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteFolder(folder.id, folder.name);
                       }}
-                      title="Delete folder"
+                      title="Delete album"
                     >
                       🗑️
                     </button>
                   </div>
                 </div>
               </div>
-              
+
               {selectedFolderId === folder.id && (
                 <div className="selected-indicator">✓</div>
               )}

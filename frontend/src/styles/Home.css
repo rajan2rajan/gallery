@@ -25,28 +25,24 @@
   background-position: 70% center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  image-rendering: -webkit-optimize-contrast;  /* For Safari */
-  image-rendering: crisp-edges;                 /* For Firefox */
-  -webkit-transform: translateZ(0);              /* Force hardware acceleration */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -webkit-transform: translateZ(0);
   transform: translateZ(0);
 }
 
-/* Image overlay */
 .image-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.3) 0%,
-    rgba(0, 0, 0, 0.7) 100%
-  );
+  background: linear-gradient(to bottom,
+      rgba(0, 0, 0, 0.3) 0%,
+      rgba(0, 0, 0, 0.7) 100%);
   pointer-events: none;
 }
 
-/* Content Container */
 .content-container {
   position: relative;
   z-index: 2;
@@ -54,25 +50,22 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 70vh;  /* Changed from 100vh to 70vh */
+  min-height: 70vh;
   padding: 20px;
   padding-top: 80px;
-  padding-bottom: 10px;  /* Reduced bottom padding */
+  padding-bottom: 10px;
   text-align: center;
   color: white;
 }
 
-/* Hero section - add bottom margin control */
 .hero-section {
-  margin-bottom: 10px;  /* Controls space after hero */
+  margin-bottom: 10px;
 }
 
-
-/* Main Heading */
 .main-heading {
   font-size: clamp(48px, 15vw, 120px);
   font-weight: 700;
-  margin-bottom: 8px;  /* Reduced from 12px */
+  margin-bottom: 8px;
   font-family: 'Dancing Script', cursive;
   background: linear-gradient(135deg, #fff, #ffd1dc);
   -webkit-background-clip: text;
@@ -82,11 +75,10 @@
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-/* Sub heading */
 .sub-heading {
   font-size: clamp(14px, 4vw, 18px);
   font-weight: 300;
-  margin-bottom: 15px;  /* Reduced from 30px */
+  margin-bottom: 15px;
   opacity: 0.9;
   font-style: italic;
   max-width: 280px;
@@ -94,8 +86,6 @@
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
-
-/* Loading Spinner */
 .loading-spinner {
   width: 50px;
   height: 50px;
@@ -113,17 +103,19 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* ========== FOLDERS SECTION STYLES ========== */
+/* ========== FOLDERS SECTION ========== */
 .folders-section {
   position: relative;
   z-index: 2;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 5px 20px 120px;  /* Large bottom padding for desktop */
+  padding: 5px 20px 120px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -142,7 +134,7 @@
   font-weight: 400;
   letter-spacing: 3px;
   text-transform: lowercase;
-  margin-bottom: 3px;  /* Added small margin */
+  margin-bottom: 3px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
@@ -151,10 +143,9 @@
   color: rgba(255, 255, 255, 0.7);
   font-family: 'Courier New', monospace;
   letter-spacing: 1.5px;
-  margin-bottom: 5px;  /* Added small margin */
+  margin-bottom: 5px;
 }
 
-/* Folders Grid */
 .folders-grid-home {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -164,119 +155,30 @@
   padding: 20px;
   width: 100%;
   max-width: 900px;
-  margin: 0 auto 30px;  /* Bottom margin adds extra space */
+  margin: 0 auto 30px;
 }
 
+/* Folder Card */
 .folder-card-home {
   position: relative;
-  width: 220px;
-  height: 250px;
+  width: 260px;
+  height: 280px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  margin: 20px auto;
+  margin: 15px auto;
   transform-origin: center;
-}
-
-.folder-card-home.popped {
-  transform: scale(1.15) translateY(-20px) !important;
-  z-index: 1000;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .folder-card-home:hover {
   transform: translateY(-8px);
-  border-color: #ff69b4;
-  box-shadow: 0 10px 25px rgba(255, 105, 180, 0.3);
 }
 
-.folder-cover-home {
-  position: relative;
-  width: 100%;
-  height: 140px;
-  overflow: hidden;
-  background: #2a2a2a;
-}
-
-.folder-cover-home img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s;
-}
-
-.folder-card-home:hover .folder-cover-home img {
-  transform: scale(1.05);
-}
-
-.folder-cover-placeholder-home {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
-  font-size: 48px;
-  color: #ff69b4;
-}
-
-.folder-photo-count-home {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.folder-info-home {
-  padding: 12px;
-  text-align: center;
-}
-
-.folder-name-home {
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.folder-description-home {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.no-folders-home {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 40px;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  border: 2px dashed rgba(255, 255, 255, 0.2);
-}
-
-/* POP EFFECT - Entire card scales and lifts */
 .folder-card-home.popped {
   transform: scale(1.15) translateY(-20px) !important;
   z-index: 1000;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Glow effect around the popped card */
 .folder-card-home.popped::before {
   content: '';
   position: absolute;
@@ -291,293 +193,199 @@
 }
 
 @keyframes glowPulse {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
-}
 
-/* All elements inside the popped card also scale */
-.folder-card-home.popped .folder-polaroid-stack {
-  transform: scale(1.05);
-}
-
-.folder-card-home.popped .stack-polaroid {
-  box-shadow: 
-    0 15px 30px rgba(255, 105, 180, 0.4),
-    0 0 0 3px #ff69b4;
-}
-
-.folder-card-home.popped .folder-info-home {
-  transform: scale(1.05);
-}
-
-.folder-card-home.popped .folder-name-home {
-  color: #ff69b4;
-  text-shadow: 0 0 15px rgba(255, 105, 180, 0.5);
-  font-size: 20px;
-}
-
-.folder-card-home.popped .folder-photo-count-home {
-  background: #ff1493;
-  transform: scale(1.1);
-  box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4);
-}
-
-/* Dim other cards when one is popped */
-.folders-grid-home:has(.popped) .folder-card-home:not(.popped) {
-  opacity: 0.5;
-  filter: blur(2px);
-  transform: scale(0.95);
-  pointer-events: none;
-}
-
-/* Add a subtle border animation */
-.folder-card-home.popped .stack-polaroid:nth-child(1) {
-  transition-delay: 0s;
-}
-
-.folder-card-home.popped .stack-polaroid:nth-child(2) {
-  transition-delay: 0.05s;
-}
-
-.folder-card-home.popped .stack-polaroid:nth-child(3) {
-  transition-delay: 0.1s;
-}
-
-.folder-card-home.popped .stack-polaroid:nth-child(4) {
-  transition-delay: 0.15s;
-}
-
-/* ========== RESPONSIVE ADJUSTMENTS ========== */
-
-/* Tablet */
-@media (max-width: 768px) {
-  .folder-card-home.popped {
-    transform: scale(1.1) translateY(-15px) !important;
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
   }
-  
-  .folder-card-home.popped::before {
-    top: -10px;
-    left: -10px;
-    right: -10px;
-    bottom: -10px;
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
   }
 }
 
-/* Mobile */
-@media (max-width: 480px) {
-  .folder-card-home.popped {
-    transform: scale(1.08) translateY(-10px) !important;
-  }
-  
-  .folder-card-home.popped::before {
-    top: -8px;
-    left: -8px;
-    right: -8px;
-    bottom: -8px;
-  }
-  
-  .folders-grid-home:has(.popped) .folder-card-home:not(.popped) {
-    opacity: 0.4;
-    filter: blur(1px);
-    transform: scale(0.92);
-  }
+/* Polaroid Stack */
+.folder-polaroid-stack {
+  position: relative;
+  width: 100%;
+  height: 190px;
+  margin-bottom: 5px;
 }
 
-/* Small Mobile */
-@media (max-width: 360px) {
-  .folder-card-home.popped {
-    transform: scale(1.05) translateY(-8px) !important;
-  }
+.stack-polaroid {
+  position: absolute;
+  width: 160px;
+  height: 180px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.9);
+  transition: all 0.3s ease;
+  left: 50%;
+  transform: translateX(-50%);
+  overflow: hidden;
 }
 
-
-/* ========== TABLET (768px and below) ========== */
-@media (max-width: 768px) {
-  .folders-section {
-    padding: 5px 15px 140px;  /* More padding on tablet */
-  }
-  
-  .folders-grid-home {
-    grid-template-columns: repeat(2, 1fr);  /* 2 columns on tablet */
-    gap: 20px;
-    max-width: 600px;
-    margin-bottom: 40px;  /* More space before time together */
-  }
-  
-  /* Adjust folder card size for tablet */
-  .folder-card-home {
-    width: 180px;
-    height: 200px;
-  }
-}
-
-/* ========== MOBILE LARGE (480px and below) ========== */
-@media (max-width: 480px) {
-  .folders-section {
-    padding: 5px 10px 160px;  /* Even more padding on mobile */
-  }
-  
-  .folders-grid-home {
-    grid-template-columns: 1fr;  /* 1 column on mobile */
-    gap: 20px;
-    max-width: 280px;
-    margin-bottom: 50px;  /* Maximum space before time together */
-  }
-  
-  .folder-card-home {
-    width: 100%;
-    height: auto;
-    min-height: 220px;
-  }
-  
-  .folder-cover-home {
-    height: 160px;
-  }
-}
-
-/* ========== MOBILE SMALL (360px and below) ========== */
-@media (max-width: 360px) {
-  .folders-section {
-    padding: 5px 10px 180px;  /* Maximum padding for very small phones */
-  }
-  
-  .folders-grid-home {
-    gap: 15px;
-    margin-bottom: 60px;
-  }
-  
-  .folder-card-home {
-    min-height: 200px;
-  }
-}
-
-/* ========== LANDSCAPE MODE ========== */
-@media (max-height: 600px) and (orientation: landscape) {
-  .folders-section {
-    padding-bottom: 100px;  /* Less padding in landscape */
-  }
-  
-  .folders-grid-home {
-    margin-bottom: 30px;
-  }
-}
-
-/* ========== TIME TOGETHER CARD - MAKE SURE IT STAYS FIXED ========== */
-.timeline-card-compact {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  z-index: 100;
-  max-width: 260px;
-  pointer-events: none;
-  /* Ensure it stays above content but doesn't block clicks */
-}
-
-/* Adjust time together position on smaller screens */
-@media (max-width: 768px) {
-  .timeline-card-compact {
-    bottom: 20px;
-    right: 20px;
-    max-width: 240px;
-  }
-}
-
-@media (max-width: 480px) {
-  .timeline-card-compact {
-    bottom: 15px;
-    right: 15px;
-    max-width: 220px;
-  }
-}
-
-/* ========== OPTIONAL: ADD A VISUAL INDICATOR ========== */
-/* This adds a subtle fade to show there's more content below */
-.folders-section::after {
+.stack-polaroid::after {
   content: '';
   position: absolute;
-  bottom: 100px;
+  bottom: 0;
   left: 0;
   right: 0;
-  height: 40px;
-  background: linear-gradient(to top, rgba(0,0,0,0.1), transparent);
-  pointer-events: none;
-  z-index: -1;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 0 0 6px 6px;
+  z-index: 1;
 }
 
-@media (max-width: 768px) {
-  .folders-section::after {
-    bottom: 120px;
-  }
+/* Stack positioning */
+.stack-polaroid:nth-child(1) {
+  top: 0;
+  z-index: 4;
+  transform: translateX(-50%) rotate(-3deg);
 }
 
-@media (max-width: 480px) {
-  .folders-section::after {
-    bottom: 140px;
-  }
+.stack-polaroid:nth-child(2) {
+  top: 8px;
+  z-index: 3;
+  transform: translateX(-45%) rotate(4deg);
 }
 
-/* ========== TIMELINE CARD ========== */
-.timeline-card-compact {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: 20px;
-  padding: 16px 20px;
-  z-index: 100;
-  max-width: 260px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  pointer-events: none;
-  border: none;
+.stack-polaroid:nth-child(3) {
+  top: 16px;
+  z-index: 2;
+  transform: translateX(-55%) rotate(-2deg);
 }
 
-.timeline-header-compact {
-  margin-bottom: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: 0.5px;
-  text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  padding-bottom: 8px;
+.stack-polaroid:nth-child(4) {
+  top: 24px;
+  z-index: 1;
+  transform: translateX(-40%) rotate(5deg);
+  opacity: 0.9;
 }
 
-.timeline-grid-compact {
+/* Stack Media (Photo & Video) */
+.stack-photo,
+.stack-video-preview {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 28px);
+  overflow: hidden;
+  border-radius: 6px 6px 0 0;
+}
+
+.stack-photo {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.stack-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.stack-video-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  background: rgba(0, 0, 0, 0.6);
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  justify-content: flex-start;
-}
-
-.timeline-item-compact {
-  display: flex;
-  align-items: baseline;
-  gap: 3px;
-}
-
-.timeline-number {
-  font-size: 22px;
-  font-weight: 600;
+  align-items: center;
+  justify-content: center;
   color: white;
-  line-height: 1;
+  pointer-events: none;
+  z-index: 2;
 }
 
-.timeline-number.seconds {
-  color: #ff69b4;
-  font-size: 28px;
+/* Hover effects for stack */
+.folder-card-home:hover .stack-polaroid {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 0 3px #ff69b4;
 }
 
-.timeline-unit {
-  font-size: 11px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+.folder-card-home:hover .stack-polaroid:nth-child(1) {
+  transform: translateX(-50%) rotate(-4deg) translateY(-5px);
 }
 
-/* ========== GALLERY PAGE STYLES ========== */
+.folder-card-home:hover .stack-polaroid:nth-child(2) {
+  transform: translateX(-45%) rotate(5deg) translateY(-3px);
+}
+
+.folder-card-home:hover .stack-polaroid:nth-child(3) {
+  transform: translateX(-55%) rotate(-3deg) translateY(-2px);
+}
+
+.folder-card-home:hover .stack-polaroid:nth-child(4) {
+  transform: translateX(-40%) rotate(6deg) translateY(-1px);
+}
+
+.folder-card-home:hover .stack-video {
+  transform: scale(1.05);
+  transition: transform 0.3s;
+}
+
+.folder-card-home:hover .stack-video-icon {
+  background: rgba(255, 105, 180, 0.9);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Folder Info */
+.folder-info-home {
+  text-align: center;
+  padding: 5px 5px 8px;
+  position: relative;
+  z-index: 10;
+}
+
+.folder-name-home {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 3px;
+  line-height: 1.2;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.folder-description-home {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 5px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.folder-photo-count-home {
+  display: inline-block;
+  background: #ff69b4;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  margin-top: 0;
+}
+
+/* Placeholder */
+.stack-polaroid.placeholder {
+  background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+}
+
+.stack-polaroid.placeholder::after {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* ========== GALLERY PAGE ========== */
 .gallery-page {
   position: relative;
   width: 100%;
@@ -627,12 +435,6 @@
   font-size: 20px;
 }
 
-.back-text {
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
 /* Folder Badge */
 .folder-badge {
   position: absolute;
@@ -652,18 +454,12 @@
   animation: slideDown 0.5s ease;
 }
 
-/* Folders header - reduced bottom margin */
-.folders-section-header {
-  text-align: center;
-  margin-bottom: 15px;  /* Reduced from 30px */
-  width: 100%;
-}
-
 @keyframes slideDown {
   from {
     opacity: 0;
     transform: translate(-50%, -20px);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, 0);
@@ -717,10 +513,7 @@
   background: white;
   padding: 15px 15px 40px 15px;
   border-radius: 10px;
-  box-shadow: 
-    0 10px 20px rgba(0, 0, 0, 0.3),
-    0 0 0 2px #f0f0f0,
-    0 0 0 4px #e0e0e0;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3), 0 0 0 2px #f0f0f0, 0 0 0 4px #e0e0e0;
   cursor: pointer;
   transition: all 0.3s;
   transform-origin: center center;
@@ -730,10 +523,7 @@
 
 .polaroid-card.hovered {
   filter: brightness(1.05);
-  box-shadow: 
-    0 20px 30px rgba(0, 0, 0, 0.4),
-    0 0 0 2px #fff,
-    0 0 0 4px #ff69b4;
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.4), 0 0 0 2px #fff, 0 0 0 4px #ff69b4;
 }
 
 .polaroid-card.selected {
@@ -747,6 +537,7 @@
   border-radius: 5px;
   background: #f0f0f0;
   margin-bottom: 10px;
+  position: relative;
 }
 
 .polaroid-photo img {
@@ -758,6 +549,51 @@
 
 .polaroid-card:hover .polaroid-photo img {
   transform: scale(1.05);
+}
+
+/* Video Thumbnail in Polaroid Cards */
+.polaroid-video-thumbnail {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.polaroid-video-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.polaroid-card:hover .polaroid-video-preview {
+  transform: scale(1.05);
+}
+
+.polaroid-play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: white;
+  opacity: 0.8;
+  transition: all 0.3s;
+  pointer-events: none;
+}
+
+.polaroid-card:hover .polaroid-play-icon {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.1);
+  background: rgba(255, 105, 180, 0.9);
 }
 
 .polaroid-footer {
@@ -773,7 +609,72 @@
   font-weight: 600;
 }
 
-/* Polaroid Modal */
+.video-badge {
+  margin-left: 5px;
+  font-size: 11px;
+}
+
+/* Timeline Card */
+.timeline-card-compact {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  padding: 16px 20px;
+  z-index: 100;
+  max-width: 260px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  border: none;
+}
+
+.timeline-header-compact {
+  margin-bottom: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 8px;
+}
+
+.timeline-grid-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  justify-content: flex-start;
+}
+
+.timeline-item-compact {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.timeline-number {
+  font-size: 22px;
+  font-weight: 600;
+  color: white;
+  line-height: 1;
+}
+
+.timeline-number.seconds {
+  color: #ff69b4;
+  font-size: 28px;
+}
+
+.timeline-unit {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* ========== MODAL STYLES ========== */
 .polaroid-modal {
   position: fixed;
   top: 0;
@@ -791,10 +692,8 @@
 .polaroid-modal-content {
   background: white;
   border-radius: 20px;
-  max-width: 95vw;        /* Use viewport width */
-  max-height: 95vh;       /* Use viewport height */
-  width: auto;            /* Auto width based on content */
-  height: auto;           /* Auto height based on content */
+  max-width: 95vw;
+  max-height: 95vh;
   position: relative;
   padding: 20px;
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
@@ -830,39 +729,6 @@
   transform: rotate(90deg) scale(1.1);
 }
 
-.modal-photo {
-  width: 100%;
-  max-height: 500px;
-  overflow: hidden;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  background: #f0f0f0;
-}
-
-.modal-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.modal-info {
-  text-align: center;
-  padding: 20px;
-  background: #f9f9f9;
-  border-radius: 10px;
-}
-
-.modal-date {
-  font-size: 16px;
-  color: #666;
-  font-family: 'Courier New', monospace;
-  background: rgba(255, 105, 180, 0.1);
-  padding: 8px 20px;
-  border-radius: 40px;
-  display: inline-block;
-}
-
-/* Photo container - ensures proper sizing */
 .modal-photo-container {
   flex: 1;
   display: flex;
@@ -871,21 +737,19 @@
   overflow: hidden;
   border-radius: 10px;
   background: #f0f0f0;
-  max-height: calc(95vh - 120px); /* Leave space for info */
+  max-height: calc(95vh - 120px);
 }
 
-/* Full-size image */
 .modal-full-image {
   max-width: 100%;
   max-height: 100%;
   width: auto;
   height: auto;
-  object-fit: contain;  /* Ensures full image is visible without cropping */
+  object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* Modal info section */
 .modal-info {
   text-align: center;
   padding: 15px 10px 5px;
@@ -905,13 +769,6 @@
   margin-bottom: 8px;
 }
 
-.modal-title {
-  font-size: 20px;
-  color: #333;
-  margin-bottom: 5px;
-  font-weight: 600;
-}
-
 .modal-description {
   font-size: 14px;
   color: #666;
@@ -920,398 +777,108 @@
   margin: 0 auto;
 }
 
-/* ========== DESKTOP SPECIFIC ========== */
-@media (min-width: 1024px) {
-  .polaroid-modal-content {
-    max-width: 90vw;
-    max-height: 90vh;
-  }
-  
-  .modal-full-image {
-    max-width: 85vw;
-    max-height: 70vh;
-  }
-  
-  .modal-info {
-    padding: 20px;
-  }
-  
-  .modal-title {
-    font-size: 24px;
-  }
-  
-  .modal-description {
-    font-size: 16px;
-  }
-}
-
-/* ========== TABLET ========== */
+/* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
-  .polaroid-modal-content {
-    padding: 15px;
-  }
-  
-  .modal-full-image {
-    max-height: 60vh;
-  }
-  
-  .modal-title {
-    font-size: 20px;
-  }
-  
-  .modal-description {
-    font-size: 14px;
-  }
-}
-
-/* ========== MOBILE ========== */
-@media (max-width: 480px) {
-  .polaroid-modal-content {
-    padding: 10px;
-    border-width: 5px;
-  }
-  
-  .modal-close {
-    top: 10px;
-    right: 10px;
-    width: 35px;
-    height: 35px;
-    font-size: 20px;
-  }
-  
-  .modal-full-image {
-    max-height: 50vh;
-  }
-  
-  .modal-date {
-    font-size: 12px;
-    padding: 4px 12px;
-  }
-  
-  .modal-title {
-    font-size: 18px;
-  }
-  
-  .modal-description {
-    font-size: 13px;
-  }
-}
-
-/* ========== LANDSCAPE MODE ========== */
-@media (max-height: 600px) and (orientation: landscape) {
-  .polaroid-modal-content {
-    flex-direction: row;
-    align-items: center;
+  .folders-grid-home {
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
-  
-  .modal-photo-container {
-    max-height: 80vh;
-    max-width: 60vw;
-  }
-  
-  .modal-info {
-    max-width: 30vw;
-    margin-top: 0;
-  }
-}
 
-/* ========== FOLDER CARDS WITH STACKED POLAROIDS ========== */
-
-/* Folder card container */
-.folder-card-home {
-  position: relative;
-  width: 260px;        /* INCREASED from 220px */
-  height: 280px;       /* INCREASED from 240px */
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  margin: 15px auto;
-  transform-origin: center;
-}
-
-/* Polaroid stack container */
-.folder-polaroid-stack {
-  position: relative;
-  width: 100%;
-  height: 190px;        /* INCREASED from 160px */
-  margin-bottom: 5px;   /* REDUCED gap between photos and text */
-}
-
-/* Individual Polaroid in the stack */
-.stack-polaroid {
-  position: absolute;
-  width: 160px;         /* INCREASED from 140px */
-  height: 180px;        /* INCREASED from 160px */
-  background: white;
-  border-radius: 8px;   /* Slightly more rounded */
-  background-size: cover;
-  background-position: center;
-  box-shadow: 
-    0 8px 16px rgba(0, 0, 0, 0.3),
-    0 0 0 2px rgba(255, 255, 255, 0.9);
-  transition: all 0.3s ease;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-/* White bottom of Polaroid */
-.stack-polaroid::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 0 0 6px 6px;
-}
-
-/* Stack positioning - creates the layered effect */
-.stack-polaroid:nth-child(1) {
-  top: 0;
-  z-index: 4;
-  transform: translateX(-50%) rotate(-3deg);
-}
-
-.stack-polaroid:nth-child(2) {
-  top: 8px;
-  z-index: 3;
-  transform: translateX(-45%) rotate(4deg);
-}
-
-.stack-polaroid:nth-child(3) {
-  top: 16px;
-  z-index: 2;
-  transform: translateX(-55%) rotate(-2deg);
-}
-
-.stack-polaroid:nth-child(4) {
-  top: 24px;
-  z-index: 1;
-  transform: translateX(-40%) rotate(5deg);
-  opacity: 0.9;
-}
-
-/* Hover effect - photos lift up */
-.folder-card-home:hover .stack-polaroid {
-  box-shadow: 
-    0 12px 24px rgba(0, 0, 0, 0.4),
-    0 0 0 3px #ff69b4;
-}
-
-.folder-card-home:hover .stack-polaroid:nth-child(1) {
-  transform: translateX(-50%) rotate(-4deg) translateY(-5px);
-}
-
-.folder-card-home:hover .stack-polaroid:nth-child(2) {
-  transform: translateX(-45%) rotate(5deg) translateY(-3px);
-}
-
-.folder-card-home:hover .stack-polaroid:nth-child(3) {
-  transform: translateX(-55%) rotate(-3deg) translateY(-2px);
-}
-
-.folder-card-home:hover .stack-polaroid:nth-child(4) {
-  transform: translateX(-40%) rotate(6deg) translateY(-1px);
-}
-
-/* Folder info section */
-.folder-info-home {
-  text-align: center;
-  padding: 5px 5px 8px;
-  position: relative;
-  z-index: 10;
-}
-
-.folder-name-home {
-  font-size: 20px;        /* INCREASED from 18px */
-  font-weight: 700;
-  color: white;
-  margin-bottom: 3px;     /* TIGHTER gap */
-  line-height: 1.2;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-.folder-description-home {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 5px;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-/* Photo count badge */
-.folder-photo-count-home {
-  display: inline-block;
-  background: #ff69b4;
-  color: white;
-  font-size: 13px;        /* INCREASED from 11px */
-  font-weight: 600;
-  padding: 4px 12px;      /* Slightly larger */
-  border-radius: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  margin-top: 0;          /* NO extra margin */
-}
-
-/* ========== RESPONSIVE STYLES ========== */
-
-/* Tablet */
-@media (max-width: 768px) {
   .folder-card-home {
     width: 200px;
     height: 230px;
   }
-  
+
   .stack-polaroid {
     width: 120px;
     height: 140px;
   }
-  
+
   .folder-name-home {
     font-size: 16px;
   }
+
+  .polaroid-grid {
+    gap: 20px;
+  }
+
+  .polaroid-card {
+    width: 240px;
+    height: 280px;
+  }
+
+  .polaroid-photo {
+    height: 180px;
+  }
+
+  .timeline-card-compact {
+    bottom: 20px;
+    right: 20px;
+    max-width: 240px;
+  }
 }
 
-/* Mobile */
 @media (max-width: 480px) {
+  .folders-grid-home {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
   .folder-card-home {
-    width: 180px;
-    height: 210px;
+    width: 220px;
+    height: 240px;
   }
-  
+
   .stack-polaroid {
-    width: 100px;
-    height: 120px;
+    width: 130px;
+    height: 145px;
   }
-  
+
   .stack-polaroid:nth-child(2) {
-    top: 6px;
+    top: 7px;
   }
-  
+
   .stack-polaroid:nth-child(3) {
-    top: 12px;
+    top: 14px;
   }
-  
+
   .stack-polaroid:nth-child(4) {
-    top: 18px;
+    top: 21px;
   }
-  
+
   .folder-name-home {
-    font-size: 15px;
+    font-size: 17px;
   }
-  
+
   .folder-photo-count-home {
     font-size: 11px;
-    padding: 3px 10px;
-  }
-}
-
-/* Small Mobile */
-@media (max-width: 768px) {
-  .folder-card-home {
-    width: 240px;        /* INCREASED from 200px */
-    height: 260px;       /* INCREASED from 220px */
-    margin: 12px auto;
-  }
-  
-  .folder-polaroid-stack {
-    height: 175px;       /* INCREASED from 145px */
-    margin-bottom: 4px;
-  }
-  
-  .stack-polaroid {
-    width: 145px;        /* INCREASED from 120px */
-    height: 160px;       /* INCREASED from 135px */
-  }
-  
-  .folder-name-home {
-    font-size: 18px;     /* INCREASED from 16px */
-    margin-bottom: 2px;
-  }
-  
-  .folder-photo-count-home {
-    font-size: 12px;     /* INCREASED from 10px */
-    padding: 3px 10px;
-  }
-}
-
-/* ========== MOBILE - BIGGER AND TIGHTER ========== */
-@media (max-width: 480px) {
-  .folder-card-home {
-    width: 220px;        /* INCREASED from 180px */
-    height: 240px;       /* INCREASED from 200px */
-    margin: 10px auto;
-  }
-  
-  .folder-polaroid-stack {
-    height: 160px;       /* INCREASED from 130px */
-    margin-bottom: 3px;
-  }
-  
-  .stack-polaroid {
-    width: 130px;        /* INCREASED from 105px */
-    height: 145px;       /* INCREASED from 120px */
-  }
-  
-  /* Adjust stack positioning for bigger cards */
-  .stack-polaroid:nth-child(2) {
-    top: 7px;            /* Adjusted from 6px */
-  }
-  
-  .stack-polaroid:nth-child(3) {
-    top: 14px;           /* Adjusted from 12px */
-  }
-  
-  .stack-polaroid:nth-child(4) {
-    top: 21px;           /* Adjusted from 18px */
-  }
-  
-  .folder-name-home {
-    font-size: 17px;     /* INCREASED from 15px */
-    margin-bottom: 2px;
-  }
-  
-  .folder-photo-count-home {
-    font-size: 11px;     /* INCREASED from 9px */
     padding: 3px 9px;
   }
-}
 
-/* ========== SMALL MOBILE - BIGGER AND TIGHTER ========== */
-@media (max-width: 360px) {
-  .folder-card-home {
-    width: 200px;        /* INCREASED from 160px */
-    height: 220px;       /* INCREASED from 185px */
-    margin: 8px auto;
+  .polaroid-card {
+    width: 200px;
+    height: 240px;
   }
-  
-  .folder-polaroid-stack {
-    height: 145px;       /* INCREASED from 115px */
-    margin-bottom: 2px;
+
+  .polaroid-photo {
+    height: 150px;
   }
-  
-  .stack-polaroid {
-    width: 115px;        /* INCREASED from 95px */
-    height: 130px;       /* INCREASED from 105px */
+
+  .polaroid-play-icon {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
   }
-  
-  .stack-polaroid:nth-child(2) {
-    top: 6px;
+
+  .stack-video-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
   }
-  
-  .stack-polaroid:nth-child(3) {
-    top: 12px;
-  }
-  
-  .stack-polaroid:nth-child(4) {
-    top: 18px;
-  }
-  
-  .folder-name-home {
-    font-size: 16px;     /* INCREASED from 14px */
-  }
-  
-  .folder-photo-count-home {
-    font-size: 10px;     /* INCREASED from 8px */
-    padding: 2px 8px;
+
+  .timeline-card-compact {
+    bottom: 15px;
+    right: 15px;
+    max-width: 220px;
   }
 }

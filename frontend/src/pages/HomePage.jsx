@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
+import VideoModal from '../components/VideoModal';
 import '../styles/Home.css';
 
 const HomePage = () => {
@@ -17,6 +18,11 @@ const HomePage = () => {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [photoPositions, setPhotoPositions] = useState([]);
   const [clickedFolder, setClickedFolder] = useState(null);
+
+  // Video modal states
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState(null);
+
   const [timeTogether, setTimeTogether] = useState({
     years: 0,
     months: 0,
@@ -28,21 +34,18 @@ const HomePage = () => {
 
   const heroRef = useRef(null);
   const foldersRef = useRef(null);
-  
+
   // Scroll animations
   const { scrollYProgress } = useScroll();
-  
-  // Hero section - disappears as you scroll down
   const heroBlur = useTransform(scrollYProgress, [0, 0.3], [0, 15]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
   const heroY = useTransform(scrollYProgress, [0, 0.3], [0, -50]);
-
-  // Folders section - appears as you scroll down
   const foldersBlur = useTransform(scrollYProgress, [0, 0.2], [10, 0]);
   const foldersOpacity = useTransform(scrollYProgress, [0, 1], [1, 1]);
   const foldersY = useTransform(scrollYProgress, [0, 0.2], [150, -30]);
 
-  const relationshipStart = new Date('2025-01-17T00:00:00');
+  const relationshipStart = new Date('2025-02-17T00:00:00');
+
   useEffect(() => {
     fetchHomepagePhotos();
     fetchFolders();
@@ -51,13 +54,13 @@ const HomePage = () => {
   // Auto-rotate background photos
   useEffect(() => {
     if (homepagePhotos.length === 0) return;
-    
+
     const interval = setInterval(() => {
-      setCurrentPhotoIndex((prevIndex) => 
+      setCurrentPhotoIndex((prevIndex) =>
         prevIndex === homepagePhotos.length - 1 ? 0 : prevIndex + 1
       );
     }, 4000);
-    
+
     return () => clearInterval(interval);
   }, [homepagePhotos]);
 
@@ -75,11 +78,35 @@ const HomePage = () => {
     }
   }, [folderPhotos]);
 
+  // ========== VIDEO DETECTION ==========
+  const isVideoFile = (file) => {
+    return file.contentType?.startsWith('video/') ||
+      file.isVideo === true ||
+      file.url?.match(/\.(mp4|mov|webm|avi|mkv)$/i);
+  };
+
+  // ========== MEDIA CLICK HANDLER ==========
+  const handleMediaClick = (photo) => {
+    if (isVideoFile(photo)) {
+      // Close photo modal if open
+      setSelectedPhoto(null);
+      // Open video modal
+      setSelectedVideoUrl(photo.url);
+      setShowVideoModal(true);
+    } else {
+      // Close video modal if open
+      setShowVideoModal(false);
+      setSelectedVideoUrl(null);
+      // Open photo modal
+      setSelectedPhoto(photo.id);
+    }
+  };
+
   // Fetch homepage photos for background
   const fetchHomepagePhotos = async () => {
     try {
       const response = await api.get('/homepage-photos');
-      
+
       if (response.data && Array.isArray(response.data) && response.data.length > 0) {
         setHomepagePhotos(response.data);
       } else {
@@ -91,38 +118,55 @@ const HomePage = () => {
     }
   };
 
-  // Fetch all folders
-const fetchFolders = async () => {
-  try {
-    setLoading(true);
-    const response = await api.get('/folders');
-    
-    // For each folder, fetch a few sample photos
-    const foldersWithSamples = await Promise.all(
-      response.data.map(async (folder) => {
-        try {
-          const photosResponse = await api.get(`/folders/${folder.id}?limit=4`);
-          return {
-            ...folder,
-            samplePhotos: photosResponse.data.photos?.map(p => p.url) || []
-          };
-        } catch (error) {
-          return {
-            ...folder,
-            samplePhotos: []
-          };
-        }
-      })
-    );
-    
-    console.log('Folders with samples:', foldersWithSamples);
-    setFolders(foldersWithSamples);
-  } catch (error) {
-    console.error('Error fetching folders:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  // Fetch all folders with sample media (both photos and videos)
+  const fetchFolders = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/folders');
+
+      // For each folder, fetch a few sample media (photos + videos)
+      const foldersWithSamples = await Promise.all(
+        response.data.map(async (folder) => {
+          try {
+            // Fetch photos and videos for this folder
+            const mediaResponse = await api.get(`/folders/${folder.id}?limit=8`);
+            const allMedia = mediaResponse.data.photos || [];
+
+            // Take first 4 media items for the stack
+            const sampleMedia = allMedia.slice(0, 4);
+
+            // Create stack items with type info
+            const stackItems = sampleMedia.map(media => ({
+              url: media.url,
+              isVideo: media.contentType?.startsWith('video/') ||
+                media.isVideo === true ||
+                media.url?.match(/\.(mp4|mov|webm|avi|mkv)$/i)
+            }));
+
+            return {
+              ...folder,
+              stackItems: stackItems,
+              samplePhotos: sampleMedia.map(m => m.url) // Keep for backward compatibility
+            };
+          } catch (error) {
+            console.warn(`Could not fetch media for folder ${folder.id}:`, error.message);
+            return {
+              ...folder,
+              stackItems: [],
+              samplePhotos: []
+            };
+          }
+        })
+      );
+
+      console.log('Folders with samples:', foldersWithSamples);
+      setFolders(foldersWithSamples);
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch photos in a specific folder
   const fetchFolderPhotos = async (folderId) => {
@@ -132,7 +176,7 @@ const fetchFolders = async () => {
       const response = await api.get(`/folders/${folderId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       setFolderPhotos(response.data.photos || []);
       setSelectedFolder(response.data.folder);
       setShowFolderContent(true);
@@ -173,6 +217,8 @@ const fetchFolders = async () => {
     setSelectedFolder(null);
     setFolderPhotos([]);
     setSelectedPhoto(null);
+    setShowVideoModal(false);
+    setSelectedVideoUrl(null);
   };
 
   const formatDate = (timestamp) => {
@@ -203,60 +249,55 @@ const fetchFolders = async () => {
   return (
     <div className="image-home">
       {/* Background Slideshow */}
-      {/* Background Slideshow - Mobile Optimized */}
-<div className="image-background">
-  <AnimatePresence mode="wait">
-    {homepagePhotos.length > 0 ? (
-      <motion.div
-        key={currentPhotoIndex}
-        className="background-image slideshow-image mobile-optimized"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ 
-          opacity: { duration: 1, ease: "easeInOut" }
-          // NO scale animation at all!
-        }}
-        style={{ 
-          backgroundImage: `url(${homepagePhotos[currentPhotoIndex]?.url})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          // Force stable rendering
-          transform: 'scale(1)',
-          transformOrigin: 'center center',
-          willChange: 'opacity',
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden'
-        }}
-      />
-    ) : (
-      <motion.div
-        className="background-image slideshow-image mobile-optimized"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        style={{ 
-          backgroundImage: `url(${process.env.PUBLIC_URL}/images/background.png)`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          transform: 'scale(1)',
-          transformOrigin: 'center center',
-          willChange: 'opacity',
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden'
-        }}
-      />
-    )}
-  </AnimatePresence>
-  <div className="image-overlay"></div>
-</div>
+      <div className="image-background">
+        <AnimatePresence mode="wait">
+          {homepagePhotos.length > 0 ? (
+            <motion.div
+              key={currentPhotoIndex}
+              className="background-image slideshow-image mobile-optimized"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ opacity: { duration: 1, ease: "easeInOut" } }}
+              style={{
+                backgroundImage: `url(${homepagePhotos[currentPhotoIndex]?.url})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                transform: 'scale(1)',
+                transformOrigin: 'center center',
+                willChange: 'opacity',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden'
+              }}
+            />
+          ) : (
+            <motion.div
+              className="background-image slideshow-image mobile-optimized"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                backgroundImage: `url(${process.env.PUBLIC_URL}/images/background.png)`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                transform: 'scale(1)',
+                transformOrigin: 'center center',
+                willChange: 'opacity',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden'
+              }}
+            />
+          )}
+        </AnimatePresence>
+        <div className="image-overlay"></div>
+      </div>
 
       {!showFolderContent ? (
         <>
           {/* Hero Section */}
-          <motion.div 
+          <motion.div
             ref={heroRef}
             className="content-container hero-section"
             style={{
@@ -266,7 +307,7 @@ const fetchFolders = async () => {
               pointerEvents: heroOpacity.get() < 0.1 ? 'none' : 'auto'
             }}
           >
-            <motion.h1 
+            <motion.h1
               className="main-heading"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -275,7 +316,7 @@ const fetchFolders = async () => {
               Puku
             </motion.h1>
 
-            <motion.p 
+            <motion.p
               className="sub-heading"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -286,7 +327,7 @@ const fetchFolders = async () => {
           </motion.div>
 
           {/* Folders Section */}
-          <motion.div 
+          <motion.div
             ref={foldersRef}
             className="folders-section"
             style={{
@@ -301,81 +342,90 @@ const fetchFolders = async () => {
             </div>
 
             {/* Folders Grid */}
-<div className="folders-grid-home">
-  {folders.length === 0 ? (
-    <div className="no-folders-home">
-      <p>No albums yet.</p>
-    </div>
-  ) : (
-    folders.map(folder => (
-      <motion.div
-        key={folder.id}
-        className={`folder-card-home ${clickedFolder === folder.id ? 'popped' : ''}`}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        whileHover={{ 
-          y: -8,
-          transition: { duration: 0.2 }
-        }}
-        onClick={() => {
-          setClickedFolder(folder.id);
-          // Navigate to folder after pop animation
-          setTimeout(() => {
-            handleFolderClick(folder.id);
-            setClickedFolder(null);
-          }, 300);
-        }}
-      >
-        {/* Stack of Polaroid photos */}
-        <div className="folder-polaroid-stack">
-          {folder.samplePhotos && folder.samplePhotos.length > 0 ? (
-            <>
-              {folder.samplePhotos.slice(0, 4).map((photo, index) => (
-                <div 
-                  key={index}
-                  className="stack-polaroid"
-                  style={{ 
-                    backgroundImage: `url(${photo})`,
-                    zIndex: 4 - index
-                  }}
-                >
-                  <div className="polaroid-bottom"></div>
+            <div className="folders-grid-home">
+              {folders.length === 0 ? (
+                <div className="no-folders-home">
+                  <p>No albums yet.</p>
                 </div>
-              ))}
-            </>
-          ) : (
-            /* Placeholder if no photos */
-            <>
-              {[1,2,3,4].map((_, index) => (
-                <div 
-                  key={index}
-                  className="stack-polaroid placeholder"
-                  style={{ zIndex: 4 - index }}
-                >
-                  <div className="polaroid-bottom"></div>
-                </div>
-              ))}
-            </>
-          )}
-        </div>
-        
-        {/* Folder info */}
-        <div className="folder-info-home">
-          <h3 className="folder-name-home">{folder.name}</h3>
-          {folder.description && (
-            <p className="folder-description-home">{folder.description}</p>
-          )}
-          <span className="folder-photo-count-home">{folder.photoCount || 0} photos</span>
-        </div>
-      </motion.div>
-    ))
-  )}
-</div>  
+              ) : (
+                folders.map(folder => (
+                  <motion.div
+                    key={folder.id}
+                    className={`folder-card-home ${clickedFolder === folder.id ? 'popped' : ''}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                    onClick={() => {
+                      setClickedFolder(folder.id);
+                      setTimeout(() => {
+                        handleFolderClick(folder.id);
+                        setClickedFolder(null);
+                      }, 300);
+                    }}
+                  >
+                    {/* Stack of Polaroid photos */}
+                    <div className="folder-polaroid-stack">
+                      {folder.stackItems && folder.stackItems.length > 0 ? (
+                        <>
+                          {folder.stackItems.slice(0, 4).map((item, index) => (
+                            <div
+                              key={index}
+                              className={`stack-polaroid ${item.isVideo ? 'video-stack' : ''}`}
+                              style={{
+                                zIndex: 4 - index
+                              }}
+                            >
+                              {item.isVideo ? (
+                                <div className="stack-video-preview">
+                                  <video
+                                    src={item.url}
+                                    preload="metadata"
+                                    className="stack-video"
+                                  />
+                                  <div className="stack-video-icon">🎥</div>
+                                </div>
+                              ) : (
+                                <div
+                                  className="stack-photo"
+                                  style={{ backgroundImage: `url(${item.url})` }}
+                                />
+                              )}
+                              <div className="polaroid-bottom"></div>
+                            </div>
+                          ))}
+                        </>
+                      ) : (
+                        <>
+                          {[1, 2, 3, 4].map((_, index) => (
+                            <div
+                              key={index}
+                              className="stack-polaroid placeholder"
+                              style={{ zIndex: 4 - index }}
+                            >
+                              <div className="polaroid-bottom"></div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </div>
+
+                    {/* Folder info */}
+                    <div className="folder-info-home">
+                      <h3 className="folder-name-home">{folder.name}</h3>
+                      {folder.description && (
+                        <p className="folder-description-home">{folder.description}</p>
+                      )}
+                      <span className="folder-photo-count-home">{folder.photoCount || 0} photos</span>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
           </motion.div>
         </>
       ) : (
-        /* Folder Content View */
+        /* Folder Content View - POLAROID GRID WITH VIDEO SUPPORT */
         <div className="gallery-page">
           <div className="gallery-content-overlay">
             <button className="back-to-grid-btn" onClick={handleBackToFolders}>
@@ -387,117 +437,161 @@ const fetchFolders = async () => {
               <span className="badge-count">{folderPhotos.length} photos</span>
             </div>
 
-            <div className="polaroid-grid-container">
-              <div className="polaroid-grid">
-                {folderPhotos.map((photo, index) => {
-                  const position = photoPositions[index] || { rotate: 0, x: 0, y: 0, scale: 1, zIndex: index };
-                  
-                  return (
-                    <motion.div
-                      key={photo.id}
-                      className={`polaroid-card ${hoveredPhoto === photo.id ? 'hovered' : ''} ${selectedPhoto === photo.id ? 'selected' : ''}`}
-                      style={{
-                        rotate: `${position.rotate}deg`,
-                        x: position.x,
-                        y: position.y,
-                        scale: position.scale,
-                        zIndex: selectedPhoto === photo.id ? 1000 : hoveredPhoto === photo.id ? 200 : position.zIndex
-                      }}
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ 
-                        opacity: 1, 
-                        scale: position.scale,
-                        rotate: `${position.rotate}deg`,
-                        x: position.x,
-                        y: position.y
-                      }}
-                      transition={{ 
-                        duration: 0.5,
-                        delay: index * 0.03
-                      }}
-                      whileHover={{ 
-                        scale: 1.1,
-                        rotate: `${position.rotate - 2}deg`,
-                        y: position.y - 20,
-                        transition: { duration: 0.2 }
-                      }}
-                      onClick={() => setSelectedPhoto(photo.id)}
-                      onHoverStart={() => setHoveredPhoto(photo.id)}
-                      onHoverEnd={() => setHoveredPhoto(null)}
-                    >
-                      <div className="polaroid-photo">
-                        <img src={photo.url} alt={photo.title || 'Memory'} />
-                      </div>
-                      <div className="polaroid-footer">
-                        <span className="polaroid-date">
-                          {formatDate(photo.uploadedAt)}
-                        </span>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
+            <div className="polaroid-grid">
+              {folderPhotos.map((photo, index) => {
+                const position = photoPositions[index] || { rotate: 0, x: 0, y: 0, scale: 1, zIndex: index };
+                const isVideo = isVideoFile(photo);
+
+                return (
+                  <motion.div
+                    key={photo.id}
+                    className={`polaroid-card ${hoveredPhoto === photo.id ? 'hovered' : ''} ${selectedPhoto === photo.id ? 'selected' : ''}`}
+                    style={{
+                      rotate: `${position.rotate}deg`,
+                      x: position.x,
+                      y: position.y,
+                      scale: position.scale,
+                      zIndex: selectedPhoto === photo.id ? 1000 : hoveredPhoto === photo.id ? 200 : position.zIndex
+                    }}
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{
+                      opacity: 1,
+                      scale: position.scale,
+                      rotate: `${position.rotate}deg`,
+                      x: position.x,
+                      y: position.y
+                    }}
+                    transition={{
+                      duration: 0.5,
+                      delay: index * 0.03
+                    }}
+                    whileHover={{
+                      scale: 1.1,
+                      rotate: `${position.rotate - 2}deg`,
+                      y: position.y - 20,
+                      transition: { duration: 0.2 }
+                    }}
+                    onHoverStart={() => setHoveredPhoto(photo.id)}
+                    onHoverEnd={() => setHoveredPhoto(null)}
+                  >
+                    {/* <div className="polaroid-photo">
+                      {isVideo ? (
+                        <div className="video-thumbnail-simple" onClick={() => handleMediaClick(photo)}>
+                          <video
+                            src={photo.url}
+                            preload="metadata"
+                            className="video-preview"
+                          />
+                          <div className="video-play-icon-simple">▶</div>
+                        </div>
+                      ) : (
+                        <img
+                          src={photo.url}
+                          alt={photo.title || 'Memory'}
+                          onClick={() => handleMediaClick(photo)}
+                        />
+                      )}
+                    </div> */}
+                    <div className="polaroid-photo">
+                      {isVideo ? (
+                        <div className="polaroid-video-thumbnail" onClick={() => handleMediaClick(photo)}>
+                          <video
+                            src={photo.url}
+                            preload="metadata"
+                            className="polaroid-video-preview"
+                          />
+                          <div className="polaroid-play-icon">▶</div>
+                        </div>
+                      ) : (
+                        <img
+                          src={photo.url}
+                          alt={photo.title || 'Memory'}
+                          onClick={() => handleMediaClick(photo)}
+                        />
+                      )}
+                    </div>
+                    <div className="polaroid-footer">
+                      <span className="polaroid-date">
+                        {formatDate(photo.uploadedAt)}
+                        {isVideo && <span className="video-badge"> 🎥</span>}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
 
-{/* Photo Modal */}
-<AnimatePresence>
-  {selectedPhoto && (
-    <motion.div 
-      className="polaroid-modal"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={() => setSelectedPhoto(null)}
-    >
-      <motion.div 
-        className="polaroid-modal-content"
-        initial={{ scale: 0.8, y: 50 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.8, y: 50 }}
-        transition={{ type: "spring", damping: 20 }}
-        onClick={e => e.stopPropagation()}
-      >
-        <button className="modal-close" onClick={() => setSelectedPhoto(null)}>×</button>
-        
-        {folderPhotos.find(p => p.id === selectedPhoto) && (
-          <>
-            <div className="modal-photo-container">
-              <img 
-                src={folderPhotos.find(p => p.id === selectedPhoto).url} 
-                alt="Memory"
-                className="modal-full-image"
-              />
-            </div>
-            <div className="modal-info">
-              <p className="modal-date">
-                {formatDate(folderPhotos.find(p => p.id === selectedPhoto).uploadedAt)}
-              </p>
-              {/* TITLE REMOVED - No more h3 element */}
-              {folderPhotos.find(p => p.id === selectedPhoto).description && (
-                <p className="modal-description">{folderPhotos.find(p => p.id === selectedPhoto).description}</p>
+            {/* Photo Modal */}
+            <AnimatePresence>
+              {selectedPhoto && !showVideoModal && (
+                <motion.div
+                  className="polaroid-modal"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setSelectedPhoto(null)}
+                >
+                  <motion.div
+                    className="polaroid-modal-content"
+                    initial={{ scale: 0.8, y: 50 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0.8, y: 50 }}
+                    transition={{ type: "spring", damping: 20 }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <button className="modal-close" onClick={() => setSelectedPhoto(null)}>×</button>
+
+                    {folderPhotos.find(p => p.id === selectedPhoto) && (
+                      <>
+                        <div className="modal-photo-container">
+                          <img
+                            src={folderPhotos.find(p => p.id === selectedPhoto).url}
+                            alt="Memory"
+                            className="modal-full-image"
+                          />
+                        </div>
+                        <div className="modal-info">
+                          <p className="modal-date">
+                            {formatDate(folderPhotos.find(p => p.id === selectedPhoto).uploadedAt)}
+                          </p>
+                          {folderPhotos.find(p => p.id === selectedPhoto).description && (
+                            <p className="modal-description">{folderPhotos.find(p => p.id === selectedPhoto).description}</p>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </motion.div>
+                </motion.div>
               )}
-            </div>
-          </>
-        )}
-      </motion.div>
-    </motion.div>
-  )}
-</AnimatePresence>
+            </AnimatePresence>
+
+            {/* Video Modal */}
+            <AnimatePresence>
+              {showVideoModal && selectedVideoUrl && (
+                <VideoModal
+                  videoUrl={selectedVideoUrl}
+                  onClose={() => {
+                    setShowVideoModal(false);
+                    setSelectedVideoUrl(null);
+                  }}
+                />
+              )}
+            </AnimatePresence>
           </div>
         </div>
       )}
 
       {/* Timeline Card - Bottom Right */}
-      <motion.div 
+      <motion.div
         className="timeline-card-compact"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.6 }}
       >
         <div className="timeline-header-compact">
-          <span>Since {relationshipStart.toLocaleDateString('en-US', { 
-            month: 'short', 
-            year: 'numeric' 
+          <span>Since {relationshipStart.toLocaleDateString('en-US', {
+            month: 'short',
+            year: 'numeric'
           })}</span>
         </div>
         <div className="timeline-grid-compact">
