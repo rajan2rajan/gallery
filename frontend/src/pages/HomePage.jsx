@@ -45,6 +45,8 @@ const HomePage = () => {
   const foldersY = useTransform(scrollYProgress, [0, 0.2], [150, -30]);
 
   const relationshipStart = new Date('2025-02-17T00:00:00');
+  // Detect if user is on mobile
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   useEffect(() => {
     fetchHomepagePhotos();
@@ -100,6 +102,65 @@ const HomePage = () => {
       // Open photo modal
       setSelectedPhoto(photo.id);
     }
+  };
+
+  // Add this inside your HomePage component (before the return statement)
+  const VideoThumbnail = ({ videoUrl, onClick }) => {
+    const [hasError, setHasError] = useState(false);
+    const videoRef = useRef(null);
+
+    useEffect(() => {
+      // Check if video thumbnail is visible on mobile
+      const checkVideo = () => {
+        if (videoRef.current) {
+          // On mobile, video often doesn't show thumbnail
+          // We'll detect if the video element has a valid frame
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = 10;
+          canvas.height = 10;
+
+          try {
+            ctx.drawImage(videoRef.current, 0, 0, 10, 10);
+            const pixelData = ctx.getImageData(0, 0, 10, 10).data;
+            const isBlack = pixelData.every(val => val === 0);
+
+            // If all pixels are black or video isn't showing properly
+            if (isBlack) {
+              setHasError(true);
+            }
+          } catch (err) {
+            setHasError(true);
+          }
+        }
+      };
+
+      // Wait a bit for video to load
+      const timer = setTimeout(checkVideo, 1000);
+
+      return () => clearTimeout(timer);
+    }, [videoUrl]);
+
+    return (
+      <div className="polaroid-video-thumbnail" onClick={onClick}>
+        {hasError ? (
+          // Mobile fallback - show video icon
+          <div className="video-mobile-fallback">
+            <span className="video-mobile-icon">🎥</span>
+            <span className="video-mobile-text">Video</span>
+          </div>
+        ) : (
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            preload="metadata"
+            className="polaroid-video-preview"
+            muted
+          />
+        )}
+        <div className="polaroid-play-icon">▶</div>
+      </div>
+    );
   };
 
   // Fetch homepage photos for background
@@ -493,13 +554,22 @@ const HomePage = () => {
                       )}
                     </div> */}
                     <div className="polaroid-photo">
-                      {isVideo ? (
+                      {isVideoFile(photo) ? (
                         <div className="polaroid-video-thumbnail" onClick={() => handleMediaClick(photo)}>
-                          <video
-                            src={photo.url}
-                            preload="metadata"
-                            className="polaroid-video-preview"
-                          />
+                          {isMobile ? (
+                            // Mobile: Show video icon (works everywhere)
+                            <div className="video-mobile-fallback">
+                              <span className="video-mobile-icon">▶</span>
+                              <span className="video-mobile-text">Video</span>
+                            </div>
+                          ) : (
+                            // Desktop: Show actual video frame
+                            <video
+                              src={photo.url}
+                              preload="metadata"
+                              className="polaroid-video-preview"
+                            />
+                          )}
                           <div className="polaroid-play-icon">▶</div>
                         </div>
                       ) : (
