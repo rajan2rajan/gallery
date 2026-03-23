@@ -19,7 +19,6 @@ const AlbumView = ({ album, onClose, onDelete }) => {
     }, [album]);
 
     useEffect(() => {
-        // Update select all when all photos are selected
         if (photos.length > 0 && selectedPhotos.length === photos.length) {
             setSelectAll(true);
         } else {
@@ -35,7 +34,6 @@ const AlbumView = ({ album, onClose, onDelete }) => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setPhotos(response.data.photos || []);
-            // Clear selection when loading new photos
             setSelectedPhotos([]);
         } catch (error) {
             console.error('Error loading album photos:', error);
@@ -78,7 +76,6 @@ const AlbumView = ({ album, onClose, onDelete }) => {
         try {
             const token = await getToken();
 
-            // Delete each selected photo
             for (const photoId of selectedPhotos) {
                 try {
                     await api.delete(`/admin/photos/${photoId}`, {
@@ -93,9 +90,7 @@ const AlbumView = ({ album, onClose, onDelete }) => {
 
             if (successCount > 0) {
                 toast.success(`Deleted ${successCount} photo${successCount > 1 ? 's' : ''}`);
-                // Reload photos without page refresh
                 await loadAlbumPhotos();
-                // Notify parent to update counts
                 if (onDelete) onDelete();
             }
 
@@ -117,16 +112,14 @@ const AlbumView = ({ album, onClose, onDelete }) => {
             file.url?.match(/\.(mp4|mov|webm|avi|mkv)$/i);
     };
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return 'Unknown date';
-        const date = new Date(timestamp);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
+    if (loading) {
+        return (
+            <div className="admin-loading-container">
+                <div className="loading-spinner"></div>
+                <p className="loading-text">Loading photos...</p>
+            </div>
+        );
+    }
     if (loading) {
         return (
             <div className="album-view-loading">
@@ -138,21 +131,23 @@ const AlbumView = ({ album, onClose, onDelete }) => {
 
     return (
         <div className="album-view">
-            {/* Header */}
-            <div className="album-view-header">
-                <button className="back-btn" onClick={onClose}>
-                    ← Back to Albums
+            {/* Sticky Header - Always Visible */}
+            <div className="album-sticky-header">
+                <button className="back-btn-sticky" onClick={onClose}>
+                    ← Back
                 </button>
-                <h2 className="album-title">{album.name}</h2>
-                <p className="album-photo-count">{photos.length} {photos.length === 1 ? 'photo' : 'photos'}</p>
+                <h1 className="album-name-sticky">{album.name}</h1>
+                <div className="photo-count-sticky">
+                    📸 {photos.length} {photos.length === 1 ? 'photo' : 'photos'}
+                </div>
             </div>
 
-            {/* Bulk Actions Bar */}
+            {/* Bulk Actions Bar (only shows when photos selected) */}
             {selectedPhotos.length > 0 && (
                 <div className="bulk-actions-bar">
                     <div className="bulk-info">
                         <span className="selected-count">{selectedPhotos.length}</span>
-                        <span className="selected-label">photo{selectedPhotos.length > 1 ? 's' : ''} selected</span>
+                        <span className="selected-label">selected</span>
                     </div>
                     <div className="bulk-buttons">
                         <button
@@ -160,7 +155,7 @@ const AlbumView = ({ album, onClose, onDelete }) => {
                             onClick={handleDeleteSelected}
                             disabled={deleting}
                         >
-                            {deleting ? 'Deleting...' : `Delete Selected (${selectedPhotos.length})`}
+                            {deleting ? 'Deleting...' : 'Delete Selected'}
                         </button>
                         <button
                             className="bulk-cancel-btn"
@@ -203,7 +198,6 @@ const AlbumView = ({ album, onClose, onDelete }) => {
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.2 }}
                         >
-                            {/* Selection Checkbox */}
                             <div className="photo-checkbox">
                                 <input
                                     type="checkbox"
@@ -212,29 +206,26 @@ const AlbumView = ({ album, onClose, onDelete }) => {
                                     disabled={deleting}
                                     id={`photo-${photo.id}`}
                                 />
-                                <label htmlFor={`photo-${photo.id}`} className="checkbox-label"></label>
                             </div>
-
-                            {/* Photo/Video Thumbnail */}
                             <div className="photo-thumbnail" onClick={() => setSelectedPhoto(photo)}>
                                 {isVideoFile ? (
                                     <div className="video-thumbnail">
-                                        <video src={photo.url} preload="metadata" />
+                                        <video
+                                            src={photo.url}
+                                            preload="metadata"
+                                            poster={photo.thumbnailUrl || ''}
+                                        />
                                         <div className="video-play-icon">▶</div>
                                     </div>
                                 ) : (
                                     <img src={photo.url} alt={photo.title || 'Memory'} />
                                 )}
                             </div>
-
-                            {/* Photo Info */}
                             <div className="photo-info">
                                 <div className="photo-title" title={photo.title || 'Untitled'}>
                                     {photo.title || 'Untitled'}
                                 </div>
-                                <div className="photo-date">
-                                    📅 {formatDate(photo.uploadedAt)}
-                                </div>
+
                                 {isVideoFile && (
                                     <div className="photo-video-badge">🎥 Video</div>
                                 )}
@@ -271,7 +262,6 @@ const AlbumView = ({ album, onClose, onDelete }) => {
                             onClick={e => e.stopPropagation()}
                         >
                             <button className="modal-close" onClick={() => setSelectedPhoto(null)}>×</button>
-
                             {isVideo(selectedPhoto) ? (
                                 <video
                                     controls
@@ -280,7 +270,6 @@ const AlbumView = ({ album, onClose, onDelete }) => {
                                     style={{ maxWidth: '100%', maxHeight: '70vh' }}
                                 >
                                     <source src={selectedPhoto.url} type={selectedPhoto.contentType || 'video/mp4'} />
-                                    Your browser does not support the video tag.
                                 </video>
                             ) : (
                                 <img
@@ -290,9 +279,7 @@ const AlbumView = ({ album, onClose, onDelete }) => {
                                     style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }}
                                 />
                             )}
-
                             <div className="modal-info">
-                                <p className="modal-date">{formatDate(selectedPhoto.uploadedAt)}</p>
                                 {isVideo(selectedPhoto) && <p className="modal-video-note">🎥 Video</p>}
                             </div>
                         </motion.div>

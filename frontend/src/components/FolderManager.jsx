@@ -121,16 +121,6 @@ const FolderManager = ({ onSelectFolder, selectedFolderId, onAlbumClick }) => {
     }
   };
 
-  const formatDate = (timestamp) => {
-    if (!timestamp) return 'Unknown';
-    const date = new Date(timestamp);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
   if (loading) {
     return <div className="loading-spinner"></div>;
   }
@@ -270,7 +260,7 @@ const FolderManager = ({ onSelectFolder, selectedFolderId, onAlbumClick }) => {
                   <p className="folder-description">{folder.description}</p>
                 )}
                 <div className="folder-meta">
-                  <span className="folder-date">{formatDate(folder.createdAt)}</span>
+                  {/* <span className="folder-date">{formatDate(folder.createdAt)}</span> */}
                   <div className="folder-actions">
                     <button
                       className="folder-action edit"

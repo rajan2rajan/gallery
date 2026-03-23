@@ -30,7 +30,6 @@ const AdminDashboard = ({ sidebarOpen, setSidebarOpen }) => {
   const [stats, setStats] = useState({
     totalPhotos: 0,
     totalFolders: 0,
-    lastUpload: null,
     storageUsed: '0 MB',
     homepagePhotos: 0
   });
@@ -214,7 +213,6 @@ const AdminDashboard = ({ sidebarOpen, setSidebarOpen }) => {
       totalPhotos: photosData.length,
       totalFolders: foldersData.length,
       totalSize: totalSize,
-      lastUpload: lastUpload,
       storageUsed: formatBytes(totalSize),
       homepagePhotos: homepageData.length
     });
@@ -346,13 +344,12 @@ const AdminDashboard = ({ sidebarOpen, setSidebarOpen }) => {
 
   if (loading) {
     return (
-      <div className="admin-loading">
+      <div className="admin-loading-container">
         <div className="loading-spinner"></div>
-        <p>Loading your dashboard...</p>
+        <p className="loading-text">Loading your dashboard...</p>
       </div>
     );
   }
-
   return (
     <div className="admin-dashboard">
       {/* Sidebar Overlay */}
@@ -401,14 +398,7 @@ const AdminDashboard = ({ sidebarOpen, setSidebarOpen }) => {
             <span className="nav-icon">📤</span>
             <span>Upload</span>
           </button>
-          <button
-            className={`nav-item ${activeTab === 'gallery' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('gallery'); closeSidebar(); }}
-          >
-            <span className="nav-icon">🖼️</span>
-            <span>All Photos</span>
-            {photos.length > 0 && <span className="nav-badge">{photos.length}</span>}
-          </button>
+
           <button
             className={`nav-item ${activeTab === 'homepage' ? 'active' : ''}`}
             onClick={() => { setActiveTab('homepage'); closeSidebar(); }}
@@ -438,19 +428,6 @@ const AdminDashboard = ({ sidebarOpen, setSidebarOpen }) => {
             {activeTab === 'gallery' && 'All Photos Gallery'}
             {activeTab === 'homepage' && 'Homepage Slideshow Manager'}
           </h1>
-          <div className="header-actions">
-            {activeTab === 'gallery' && (
-              <div className="search-box">
-                <span className="search-icon">🔍</span>
-                <input
-                  type="text"
-                  placeholder="Search photos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            )}
-          </div>
         </header>
 
         {/* Content */}
@@ -623,82 +600,6 @@ const AdminDashboard = ({ sidebarOpen, setSidebarOpen }) => {
                       {uploading ? 'Uploading...' : `Upload ${selectedFiles.length} Photo${selectedFiles.length > 1 ? 's' : ''}`}
                     </button>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-
-
-          {/* Gallery Tab */}
-          {activeTab === 'gallery' && (
-            <div className="gallery-content">
-              {selectedPhotos.length > 0 && (
-                <div className="bulk-actions">
-                  <span>{selectedPhotos.length} photos selected</span>
-                  <button onClick={handleBulkDelete} className="btn-delete-bulk">
-                    Delete Selected
-                  </button>
-                  <button onClick={() => setSelectedPhotos([])} className="btn-cancel">
-                    Cancel
-                  </button>
-                </div>
-              )}
-
-              <div className="photo-grid">
-                {filteredPhotos.map(photo => (
-                  <div
-                    key={photo.id}
-                    className={`photo-card ${selectedPhotos.includes(photo.id) ? 'selected' : ''}`}
-                  >
-                    <div className="photo-preview">
-                      <img src={photo.url} alt={photo.title} />
-                      <div className="photo-overlay">
-                        <button
-                          className="photo-action view"
-                          onClick={() => window.open(photo.url, '_blank')}
-                          title="View full size"
-                        >
-                          👁️
-                        </button>
-                        <button
-                          className="photo-action delete"
-                          onClick={() => handleDelete(photo.id)}
-                          title="Delete photo"
-                        >
-                          🗑️
-                        </button>
-                        <button
-                          className="photo-action select"
-                          onClick={() => {
-                            if (selectedPhotos.includes(photo.id)) {
-                              setSelectedPhotos(selectedPhotos.filter(id => id !== photo.id));
-                            } else {
-                              setSelectedPhotos([...selectedPhotos, photo.id]);
-                            }
-                          }}
-                          title="Select"
-                        >
-                          ✓
-                        </button>
-                      </div>
-                      {selectedPhotos.includes(photo.id) && (
-                        <div className="selected-badge">✓</div>
-                      )}
-                    </div>
-                    <div className="photo-details">
-                      <h4>{photo.title || 'Untitled'}</h4>
-                      <span className="photo-folder">📁 {photo.folderName || 'No folder'}</span>
-                      <span className="photo-date">{formatDate(photo.uploadedAt)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {filteredPhotos.length === 0 && (
-                <div className="empty-state">
-                  <div className="empty-icon">📷</div>
-                  <h3>No photos yet</h3>
-                  <p>Start by uploading your first photo</p>
                 </div>
               )}
             </div>

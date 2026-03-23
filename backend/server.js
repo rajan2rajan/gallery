@@ -5,6 +5,8 @@ const admin = require('firebase-admin');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const ffmpeg = require('fluent-ffmpeg');
+const { PassThrough } = require('stream');
 
 dotenv.config();
 
@@ -36,67 +38,92 @@ let bucketName = '';
 
 try {
   if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
-    
+
     console.log('📁 Loading Firebase credentials from environment variables');
-    
+
     const serviceAccount = {
       projectId: process.env.FIREBASE_PROJECT_ID,
       privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
     };
-    
+
     // Try .firebasestorage.app first (new format)
     bucketName = `${serviceAccount.projectId}.firebasestorage.app`;
-    
+
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       storageBucket: bucketName
     });
-    
+
     db = admin.firestore();
     bucket = admin.storage().bucket();
     auth = admin.auth();
     firebaseInitialized = true;
-    
+
     console.log('✅ Firebase Admin initialized successfully');
     console.log(`📦 Using bucket: ${bucketName}`);
-    
+
   } else {
     console.log('⚠️ No Firebase credentials found in environment variables.');
   }
 } catch (error) {
   console.error('❌ Firebase initialization error:', error.message);
-  
+
   // Try alternative bucket name
   if (error.message.includes('bucket does not exist')) {
     try {
       console.log('\n🔄 Trying alternative bucket name...');
-      
+
       const serviceAccount = {
         projectId: process.env.FIREBASE_PROJECT_ID,
         privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       };
-      
+
       bucketName = `${serviceAccount.projectId}.appspot.com`;
-      
+
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         storageBucket: bucketName
       });
-      
+
       db = admin.firestore();
       bucket = admin.storage().bucket();
       auth = admin.auth();
       firebaseInitialized = true;
-      
+
       console.log('✅ Firebase Admin initialized with alternative bucket');
       console.log(`📦 Using bucket: ${bucketName}`);
-      
+
     } catch (secondError) {
       console.error('❌ Alternative also failed:', secondError.message);
     }
   }
+}
+
+// Function to generate thumbnail from video buffer
+function generateVideoThumbnail(videoBuffer) {
+  return new Promise((resolve, reject) => {
+    const inputStream = new PassThrough();
+    inputStream.end(videoBuffer);
+
+    let outputBuffer = Buffer.alloc(0);
+
+    ffmpeg(inputStream)
+      .inputFormat('mp4')
+      .on('error', reject)
+      .on('end', () => {
+        resolve(outputBuffer);
+      })
+      .screenshots({
+        count: 1,
+        timestamps: ['00:00:01'],  // Take frame at 1 second
+        size: '320x240'
+      })
+      .on('data', (chunk) => {
+        outputBuffer = Buffer.concat([outputBuffer, chunk]);
+      });
+  });
 }
 
 // ==================== AUTHENTICATION MIDDLEWARE ====================
@@ -124,7 +151,7 @@ const isAdmin = async (req, res, next) => {
   try {
     const userRef = db.collection('users').doc(req.user.uid);
     const userDoc = await userRef.get();
-    
+
     if (!userDoc.exists) {
       await userRef.set({
         email: req.user.email,
@@ -135,11 +162,11 @@ const isAdmin = async (req, res, next) => {
     } else {
       req.user.isAdmin = userDoc.data().isAdmin || false;
     }
-    
+
     if (!req.user.isAdmin) {
       return res.status(403).json({ error: 'Access denied. Admin only.' });
     }
-    
+
     next();
   } catch (error) {
     console.error('Admin check error:', error);
@@ -174,7 +201,7 @@ const homepageUpload = multer({
 
 // ==================== PUBLIC ROUTES ====================
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'Puku Gallery API',
     status: 'running',
     firebase: firebaseInitialized ? 'connected' : 'not configured',
@@ -189,7 +216,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/test', (req, res) => {
-  res.json({ 
+  res.json({
     success: true,
     message: 'Backend is working!',
     firebase: firebaseInitialized ? 'connected' : 'not configured',
@@ -212,7 +239,7 @@ app.get('/api/folders', async (req, res) => {
     const snapshot = await db.collection('folders')
       .orderBy('createdAt', 'desc')
       .get();
-    
+
     const folders = [];
     snapshot.forEach(doc => {
       folders.push({
@@ -224,7 +251,7 @@ app.get('/api/folders', async (req, res) => {
         createdAt: doc.data().createdAt?.toDate()
       });
     });
-    
+
     res.json(folders);
   } catch (error) {
     console.error('Error fetching folders:', error);
@@ -235,36 +262,38 @@ app.get('/api/folders', async (req, res) => {
 app.get('/api/folders/:folderId', async (req, res) => {
   try {
     const { folderId } = req.params;
-    
+
     const folderDoc = await db.collection('folders').doc(folderId).get();
-    
+
     if (!folderDoc.exists) {
       return res.status(404).json({ error: 'Folder not found' });
     }
-    
+
     const folderData = folderDoc.data();
-    
+
     let photos = [];
     try {
       const photosSnapshot = await db.collection('photos')
         .where('folderId', '==', folderId)
         .orderBy('uploadedAt', 'desc')
         .get();
-      
+
       photosSnapshot.forEach(doc => {
         photos.push({
           id: doc.id,
           url: doc.data().url,
+          thumbnailUrl: doc.data().thumbnailUrl || null,  // ← ADD THIS
           title: doc.data().title,
           description: doc.data().description,
-          uploadedAt: doc.data().uploadedAt?.toDate()
+          uploadedAt: doc.data().uploadedAt?.toDate(),
+          contentType: doc.data().contentType,
+          isVideo: doc.data().isVideo || false
         });
       });
     } catch (photosError) {
       console.log('Error fetching photos:', photosError.message);
-      // Return empty photos array if query fails
     }
-    
+
     res.json({
       folder: {
         id: folderDoc.id,
@@ -293,7 +322,7 @@ app.get('/api/homepage-photos', async (req, res) => {
       .where('active', '==', true)
       .orderBy('uploadedAt', 'desc')
       .get();
-    
+
     const photos = [];
     snapshot.forEach(doc => {
       const data = doc.data();
@@ -306,7 +335,7 @@ app.get('/api/homepage-photos', async (req, res) => {
         });
       }
     });
-    
+
     res.json(photos);
   } catch (error) {
     console.error('Error in homepage-photos endpoint:', error);
@@ -318,20 +347,20 @@ app.get('/api/homepage-photos', async (req, res) => {
 app.post('/api/admin/folders', authenticateUser, isAdmin, async (req, res) => {
   try {
     const { name, description } = req.body;
-    
+
     if (!name) {
       return res.status(400).json({ error: 'Folder name is required' });
     }
-    
+
     const existingFolders = await db.collection('folders')
       .where('name', '==', name)
       .where('createdBy', '==', req.user.uid)
       .get();
-    
+
     if (!existingFolders.empty) {
       return res.status(400).json({ error: 'Folder with this name already exists' });
     }
-    
+
     const folderData = {
       name: name,
       description: description || '',
@@ -341,9 +370,9 @@ app.post('/api/admin/folders', authenticateUser, isAdmin, async (req, res) => {
       photoCount: 0,
       coverPhoto: null
     };
-    
+
     const folderRef = await db.collection('folders').add(folderData);
-    
+
     res.status(201).json({
       id: folderRef.id,
       ...folderData,
@@ -359,21 +388,21 @@ app.put('/api/admin/folders/:folderId', authenticateUser, isAdmin, async (req, r
   try {
     const { folderId } = req.params;
     const { name, description } = req.body;
-    
+
     const folderRef = db.collection('folders').doc(folderId);
     const folderDoc = await folderRef.get();
-    
+
     if (!folderDoc.exists) {
       return res.status(404).json({ error: 'Folder not found' });
     }
-    
+
     const updateData = {};
     if (name) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     updateData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
-    
+
     await folderRef.update(updateData);
-    
+
     res.json({ message: 'Folder updated successfully' });
   } catch (error) {
     console.error('Error updating folder:', error);
@@ -384,36 +413,36 @@ app.put('/api/admin/folders/:folderId', authenticateUser, isAdmin, async (req, r
 app.delete('/api/admin/folders/:folderId', authenticateUser, isAdmin, async (req, res) => {
   try {
     const { folderId } = req.params;
-    
+
     const folderRef = db.collection('folders').doc(folderId);
     const folderDoc = await folderRef.get();
-    
+
     if (!folderDoc.exists) {
       return res.status(404).json({ error: 'Folder not found' });
     }
-    
+
     const photosSnapshot = await db.collection('photos')
       .where('folderId', '==', folderId)
       .get();
-    
+
     const batch = db.batch();
-    
+
     for (const photoDoc of photosSnapshot.docs) {
       const photoData = photoDoc.data();
-      
+
       try {
         const file = bucket.file(photoData.filePath);
         await file.delete();
       } catch (storageError) {
         console.warn('Storage file may not exist:', storageError);
       }
-      
+
       batch.delete(photoDoc.ref);
     }
-    
+
     batch.delete(folderRef);
     await batch.commit();
-    
+
     res.json({ message: 'Folder and all its photos deleted successfully' });
   } catch (error) {
     console.error('Error deleting folder:', error);
@@ -425,26 +454,26 @@ app.post('/api/admin/folders/:folderId/cover', authenticateUser, isAdmin, async 
   try {
     const { folderId } = req.params;
     const { photoId } = req.body;
-    
+
     const folderRef = db.collection('folders').doc(folderId);
     const folderDoc = await folderRef.get();
-    
+
     if (!folderDoc.exists) {
       return res.status(404).json({ error: 'Folder not found' });
     }
-    
+
     const photoDoc = await db.collection('photos').doc(photoId).get();
-    
+
     if (!photoDoc.exists) {
       return res.status(404).json({ error: 'Photo not found' });
     }
-    
+
     await folderRef.update({
       coverPhoto: photoDoc.data().url,
       coverPhotoId: photoId,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
-    
+
     res.json({ message: 'Cover photo updated successfully' });
   } catch (error) {
     console.error('Error updating cover photo:', error);
@@ -458,33 +487,34 @@ app.post('/api/admin/photos/bulk', authenticateUser, isAdmin, upload.array('phot
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No photos uploaded' });
     }
-    
+
     const { folderId } = req.body;
-    
+
     if (!folderId) {
       return res.status(400).json({ error: 'Please select a folder' });
     }
-    
+
     const folderDoc = await db.collection('folders').doc(folderId).get();
     if (!folderDoc.exists) {
       return res.status(404).json({ error: 'Folder not found' });
     }
-    
+
     const folderName = folderDoc.data().name;
     const uploadedPhotos = [];
     const failedUploads = [];
-    
+
     for (const file of req.files) {
       try {
-        const fileType = file.mimetype.startsWith('image/') ? 'images' : 'videos';
+        const isVideo = file.mimetype.startsWith('video/');
+        const fileType = isVideo ? 'videos' : 'images';
         const timestamp = Date.now();
         const random = Math.floor(Math.random() * 1000);
         const safeFileName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
         const fileName = `${timestamp}_${random}_${safeFileName}`;
         const filePath = `folders/${folderName}/${fileName}`;
-        
+
         const bucketFile = bucket.file(filePath);
-        
+
         await bucketFile.save(file.buffer, {
           metadata: {
             contentType: file.mimetype,
@@ -493,15 +523,16 @@ app.post('/api/admin/photos/bulk', authenticateUser, isAdmin, upload.array('phot
               uploadedByEmail: req.user.email,
               uploadedAt: new Date().toISOString(),
               folderId: folderId,
-              folderName: folderName
+              folderName: folderName,
+              isVideo: String(isVideo)
             }
           }
         });
-        
+
         await bucketFile.makePublic();
-        
+
         const publicUrl = `https://storage.googleapis.com/${bucketName}/${filePath}`;
-        
+
         const photoData = {
           title: req.body.title || file.originalname,
           description: req.body.description || '',
@@ -514,22 +545,58 @@ app.post('/api/admin/photos/bulk', authenticateUser, isAdmin, upload.array('phot
           size: file.size,
           contentType: file.mimetype,
           fileType: fileType,
+          isVideo: isVideo,
           folderId: folderId,
           folderName: folderName,
           originalName: file.originalname
         };
-        
+
+        // ========== GENERATE THUMBNAIL FOR VIDEOS ==========
+        if (isVideo) {
+          try {
+            const thumbnailBuffer = await generateVideoThumbnail(file.buffer);
+
+            const thumbnailFileName = `${timestamp}_${random}_thumb_${safeFileName}.jpg`;
+            const thumbnailPath = `folders/${folderName}/thumbnails/${thumbnailFileName}`;
+            const thumbnailFile = bucket.file(thumbnailPath);
+
+            await thumbnailFile.save(thumbnailBuffer, {
+              metadata: {
+                contentType: 'image/jpeg',
+                metadata: {
+                  generatedFrom: file.originalname,
+                  uploadedBy: req.user.uid,
+                  uploadedAt: new Date().toISOString()
+                }
+              }
+            });
+
+            await thumbnailFile.makePublic();
+            const thumbnailUrl = `https://storage.googleapis.com/${bucketName}/${thumbnailPath}`;
+
+            photoData.thumbnailUrl = thumbnailUrl;
+            console.log(`✅ Thumbnail generated for: ${file.originalname}`);
+
+          } catch (thumbError) {
+            console.error(`❌ Thumbnail failed for ${file.originalname}:`, thumbError.message);
+            // Video will still work without thumbnail
+          }
+        }
+        // ========== END THUMBNAIL GENERATION ==========
+
         const photoRef = await db.collection('photos').add(photoData);
-        
+
         uploadedPhotos.push({
           id: photoRef.id,
           fileName: fileName,
           url: publicUrl,
+          thumbnailUrl: photoData.thumbnailUrl || null,
           fileType: fileType,
+          isVideo: isVideo,
           folderId: folderId,
           folderName: folderName
         });
-        
+
       } catch (fileError) {
         console.error(`❌ Error uploading ${file.originalname}:`, fileError);
         failedUploads.push({
@@ -538,14 +605,14 @@ app.post('/api/admin/photos/bulk', authenticateUser, isAdmin, upload.array('phot
         });
       }
     }
-    
+
     if (uploadedPhotos.length > 0) {
       const folderRef = db.collection('folders').doc(folderId);
       await folderRef.update({
         photoCount: admin.firestore.FieldValue.increment(uploadedPhotos.length),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
-      
+
       const folderData = folderDoc.data();
       if (!folderData.coverPhoto && uploadedPhotos.length > 0) {
         await folderRef.update({
@@ -554,7 +621,7 @@ app.post('/api/admin/photos/bulk', authenticateUser, isAdmin, upload.array('phot
         });
       }
     }
-    
+
     const response = {
       message: `Successfully uploaded ${uploadedPhotos.length} out of ${req.files.length} files to folder "${folderName}"`,
       uploaded: uploadedPhotos.length,
@@ -563,12 +630,12 @@ app.post('/api/admin/photos/bulk', authenticateUser, isAdmin, upload.array('phot
       folderName: folderName,
       photos: uploadedPhotos
     };
-    
+
     if (failedUploads.length > 0) {
       response.failed = failedUploads;
       response.failedCount = failedUploads.length;
     }
-    
+
     res.status(201).json(response);
   } catch (error) {
     console.error('❌ Error in bulk upload:', error);
@@ -581,7 +648,7 @@ app.get('/api/admin/photos', authenticateUser, isAdmin, async (req, res) => {
     const snapshot = await db.collection('photos')
       .orderBy('uploadedAt', 'desc')
       .get();
-    
+
     const photos = [];
     snapshot.forEach(doc => {
       photos.push({
@@ -590,7 +657,7 @@ app.get('/api/admin/photos', authenticateUser, isAdmin, async (req, res) => {
         uploadedAt: doc.data().uploadedAt?.toDate()
       });
     });
-    
+
     res.json(photos);
   } catch (error) {
     console.error('Error fetching admin photos:', error);
@@ -601,32 +668,32 @@ app.get('/api/admin/photos', authenticateUser, isAdmin, async (req, res) => {
 app.delete('/api/admin/photos/:photoId', authenticateUser, isAdmin, async (req, res) => {
   try {
     const { photoId } = req.params;
-    
+
     const photoRef = db.collection('photos').doc(photoId);
     const photoDoc = await photoRef.get();
-    
+
     if (!photoDoc.exists) {
       return res.status(404).json({ error: 'Photo not found' });
     }
-    
+
     const photoData = photoDoc.data();
-    
+
     try {
       const file = bucket.file(photoData.filePath);
       await file.delete();
     } catch (storageError) {
       console.warn('Storage file may not exist:', storageError);
     }
-    
+
     await photoRef.delete();
-    
+
     if (photoData.folderId) {
       const folderRef = db.collection('folders').doc(photoData.folderId);
       await folderRef.update({
         photoCount: admin.firestore.FieldValue.increment(-1)
       });
     }
-    
+
     res.json({ message: 'Photo deleted successfully' });
   } catch (error) {
     console.error('Error deleting photo:', error);
@@ -640,14 +707,14 @@ app.post('/api/admin/homepage-photos', authenticateUser, isAdmin, homepageUpload
     if (!req.file) {
       return res.status(400).json({ error: 'No photo uploaded' });
     }
-    
+
     const { title, description } = req.body;
-    
+
     const timestamp = Date.now();
     const safeFileName = req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
     const fileName = `homepage_${timestamp}_${safeFileName}`;
     const filePath = `homepage/${fileName}`;
-    
+
     const file = bucket.file(filePath);
     await file.save(req.file.buffer, {
       metadata: {
@@ -659,11 +726,11 @@ app.post('/api/admin/homepage-photos', authenticateUser, isAdmin, homepageUpload
         }
       }
     });
-    
+
     await file.makePublic();
-    
+
     const publicUrl = `https://storage.googleapis.com/${bucketName}/${filePath}`;
-    
+
     const photoData = {
       title: title || fileName,
       description: description || 'Homepage slideshow photo',
@@ -677,9 +744,9 @@ app.post('/api/admin/homepage-photos', authenticateUser, isAdmin, homepageUpload
       contentType: req.file.mimetype,
       active: true
     };
-    
+
     const photoRef = await db.collection('homepagePhotos').add(photoData);
-    
+
     res.status(201).json({
       id: photoRef.id,
       message: 'Homepage photo uploaded successfully',
@@ -706,7 +773,7 @@ app.get('/api/admin/homepage-photos', authenticateUser, isAdmin, async (req, res
       console.log('homepagePhotos collection does not exist yet');
       return res.json([]);
     }
-    
+
     const photos = [];
     snapshot.forEach(doc => {
       photos.push({
@@ -715,7 +782,7 @@ app.get('/api/admin/homepage-photos', authenticateUser, isAdmin, async (req, res
         uploadedAt: doc.data().uploadedAt?.toDate()
       });
     });
-    
+
     res.json(photos);
   } catch (error) {
     console.error('Error fetching homepage photos:', error);
@@ -726,25 +793,25 @@ app.get('/api/admin/homepage-photos', authenticateUser, isAdmin, async (req, res
 app.delete('/api/admin/homepage-photos/:photoId', authenticateUser, isAdmin, async (req, res) => {
   try {
     const { photoId } = req.params;
-    
+
     const photoRef = db.collection('homepagePhotos').doc(photoId);
     const photoDoc = await photoRef.get();
-    
+
     if (!photoDoc.exists) {
       return res.status(404).json({ error: 'Photo not found' });
     }
-    
+
     const photoData = photoDoc.data();
-    
+
     try {
       const file = bucket.file(photoData.filePath);
       await file.delete();
     } catch (storageError) {
       console.warn('Storage file may not exist:', storageError);
     }
-    
+
     await photoRef.delete();
-    
+
     res.json({ message: 'Homepage photo deleted successfully' });
   } catch (error) {
     console.error('Error deleting homepage photo:', error);
@@ -756,22 +823,22 @@ app.put('/api/admin/homepage-photos/:photoId', authenticateUser, isAdmin, async 
   try {
     const { photoId } = req.params;
     const { title, description, active } = req.body;
-    
+
     const photoRef = db.collection('homepagePhotos').doc(photoId);
     const photoDoc = await photoRef.get();
-    
+
     if (!photoDoc.exists) {
       return res.status(404).json({ error: 'Photo not found' });
     }
-    
+
     const updateData = {};
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
     if (active !== undefined) updateData.active = active;
     updateData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
-    
+
     await photoRef.update(updateData);
-    
+
     res.json({ message: 'Homepage photo updated successfully' });
   } catch (error) {
     console.error('Error updating homepage photo:', error);
@@ -784,14 +851,14 @@ app.get('/api/user/profile', authenticateUser, async (req, res) => {
   try {
     const userRef = db.collection('users').doc(req.user.uid);
     const userDoc = await userRef.get();
-    
+
     if (!userDoc.exists) {
       await userRef.set({
         email: req.user.email,
         isAdmin: false,
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
-      
+
       res.json({
         uid: req.user.uid,
         email: req.user.email,
